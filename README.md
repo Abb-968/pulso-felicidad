@@ -1,6 +1,6 @@
 # El pulso de la felicidad mundial
 
-**Equipo 1**
+**Proyecto 1**
 
 **Integrantes:**
 - Abigail Hernandez Contreras
