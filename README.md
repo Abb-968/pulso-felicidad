@@ -3,7 +3,7 @@
 **Equipo 1**
 
 **Integrantes:**
-- Abigail Hernández Contreras
+- Abigail Hernandez Contreras
 - Jorge Enrique Soberanes Espinosa
 - Diego Ángel Vázquez Contreras
 
