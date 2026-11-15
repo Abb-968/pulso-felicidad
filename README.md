@@ -3,7 +3,7 @@
 **Equipo 1** | **Proyecto 1** — Visualización de Datos (Universidad del Caribe)
 
 ## 👥 Integrantes
-- Abigail Hernández Contreras
+- Abigail Hernandez Contreras
 - Jorge Enrique Soberanes Espinosa
 - Diego Ángel Vázquez Contreras
 
