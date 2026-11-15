@@ -1,11 +1,11 @@
 # El pulso de la felicidad mundial
 
-**Proyecto 1**
+**Equipo 1** | **Proyecto 1** — Visualización de Datos (Universidad del Caribe)
 
 **Integrantes:**
-- Abigail Hernandez Contreras
+- Abigail Hernández Contreras
 - Jorge Enrique Soberanes Espinosa
 - Diego Ángel Vázquez Contreras
 
 **Descripción del proyecto:**
-Dashboard interactivo y dinámico desarrollado en React para analizar el dataset "World Happiness Report 2015-2024". Este proyecto de tipo táctico explora cómo distintos factores socioeconómicos (PIB per cápita, apoyo social, esperanza de vida, libertad y generosidad) influyen en el índice de felicidad de 175 países a lo largo de una década. Incluye una arquitectura con preprocesamiento en Node.js, almacenamiento en Supabase (PostgreSQL) y análisis estadístico complementario.
+Dashboard interactivo de tipo táctico desarrollado en React (Vite + Recharts) para analizar el dataset *World Happiness Report 2015-2024* (1,502 observaciones en 165 países). El tablero permite explorar la evolución temporal del bienestar subjetivo y evaluar cómo se asocian seis dimensiones socioeconómicas (PIB per cápita, apoyo social, esperanza de vida sana, libertad, generosidad y percepción de corrupción) mediante filtros dinámicos. Incluye un pipeline reproducible en Python (`pandas`), almacenamiento en Supabase (PostgreSQL) y despliegue web público.
