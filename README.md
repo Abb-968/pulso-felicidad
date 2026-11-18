@@ -1,6 +1,6 @@
 # El pulso de la felicidad mundial
 
-**Equipo 1** | **Proyecto 1** — Visualización de Datos (Universidad del Caribe)
+**Proyecto 1** — Visualización de Datos (Universidad del Caribe)
 
 ## 👥 Integrantes
 - Abigail Hernandez Contreras
