@@ -5,8 +5,17 @@ export function filterByYearAndRegion(data, year, region = 'Todas') {
   ))
 }
 
+function toFiniteNumber(value) {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null
+  if (typeof value === 'string') {
+    const normalized = Number(value.replace(',', '.'))
+    return Number.isFinite(normalized) ? normalized : null
+  }
+  return null
+}
+
 export function average(values) {
-  const valid = values.filter((value) => Number.isFinite(value))
+  const valid = values.map((value) => toFiniteNumber(value)).filter((value) => value !== null)
   return valid.length ? valid.reduce((sum, value) => sum + value, 0) / valid.length : null
 }
 

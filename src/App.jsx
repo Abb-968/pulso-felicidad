@@ -17,6 +17,7 @@ export default function App() {
   const [happiness, setHappiness] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
+  const [isDataNotesOpen, setIsDataNotesOpen] = useState(false)
 
   const loadData = useCallback(async () => {
     try {
@@ -45,6 +46,23 @@ export default function App() {
     setSearch('')
   }
 
+  const openDataNotes = () => {
+    setIsDataNotesOpen(true)
+  }
+
+  const closeDataNotes = useCallback(() => {
+    setIsDataNotesOpen(false)
+  }, [])
+
+  useEffect(() => {
+    if (!isDataNotesOpen) return undefined
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') closeDataNotes()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [isDataNotesOpen, closeDataNotes])
+
   const selectCountry = (key) => {
     setCountryKey(key)
     setTab('Mi país')
@@ -52,7 +70,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <Header year={year} setYear={setYear} region={region} setRegion={setRegion} regions={regions} countries={countries} yearCountryCount={yearCountryCount} search={search} setSearch={setSearch} tab={tab} setTab={setTab} clearFilters={clearFilters} onCountrySelect={selectCountry} onDataNotes={() => setTab('Datos y notas')} />
+      <Header year={year} setYear={setYear} region={region} setRegion={setRegion} regions={regions} countries={countries} yearCountryCount={yearCountryCount} search={search} setSearch={setSearch} tab={tab} setTab={setTab} clearFilters={clearFilters} onCountrySelect={selectCountry} onDataNotes={openDataNotes} />
       <main>
         {isLoading ? (
           <div className="loading-grid" aria-live="polite" aria-busy="true">
@@ -65,11 +83,19 @@ export default function App() {
           <div className="empty-state"><span className="empty-icon">◎</span><h2>No se pudieron cargar los datos</h2><p>Revisa la conexión o vuelve a intentarlo.</p><button type="button" onClick={() => { setIsLoading(true); setLoadError(false); loadData() }}>Reintentar</button></div>
         ) : filtered.length === 0 ? (
           <div className="empty-state"><span className="empty-icon">◎</span><h2>No hay países con estos filtros</h2><p>Prueba otra región, año o nombre de país.</p><button type="button" onClick={clearFilters}>Limpiar filtros</button></div>
-        ) : tab === 'Panorama' ? <Panorama data={happiness} year={year} region={region} onSelectCountry={selectCountry} countryKey={countryKey} onOpenDataNotes={() => setTab('Datos y notas')} />
-          : tab === 'Explorar factores' ? <Factors data={happiness} year={year} region={region} countryKey={countryKey} onOpenDataNotes={() => setTab('Datos y notas')} />
+        ) : tab === 'Panorama' ? <Panorama data={happiness} year={year} region={region} onSelectCountry={selectCountry} countryKey={countryKey} onOpenDataNotes={openDataNotes} />
+          : tab === 'Explorar factores' ? <Factors data={happiness} year={year} region={region} countryKey={countryKey} onOpenDataNotes={openDataNotes} />
             : tab === 'Mi país' ? <CountryView data={happiness} year={year} countryKey={countryKey} setCountryKey={setCountryKey} search={search} />
-              : <DataNotes data={happiness} year={year} region={region} search={search} />}
+              : <CountryView data={happiness} year={year} countryKey={countryKey} setCountryKey={setCountryKey} search={search} />}
       </main>
+
+      {isDataNotesOpen && !isLoading && !loadError && (
+        <div className="drawer-backdrop" onClick={closeDataNotes}>
+          <aside className="data-drawer-panel" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-label="Datos y notas">
+            <DataNotes data={happiness} year={year} region={region} search={search} onClose={closeDataNotes} />
+          </aside>
+        </div>
+      )}
     </div>
   )
 }

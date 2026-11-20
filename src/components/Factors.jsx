@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, BarChart, Bar, LabelList, ErrorBar, Cell } from 'recharts'
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, BarChart, Bar, LabelList, ErrorBar, Cell, ReferenceLine, ReferenceDot } from 'recharts'
 import { pearsonCorrelation } from '../utils/metrics.js'
 import { fmtNum } from '../utils/format.js'
 import SpanishTooltip, { ScatterSpanishTooltip } from './SpanishTooltip.jsx'
@@ -34,6 +34,20 @@ function CorrelationTrendTooltip({ active, payload, label }) {
   return <SpanishTooltip active={active} payload={payload} label={label} labelPrefix="Año " nameMap={{ r: 'Correlación (r)' }} />
 }
 
+function NdBadge({ viewBox, x, y }) {
+  const cx = viewBox?.x ?? x ?? 0
+  const cy = viewBox?.y ?? y ?? 0
+  const width = 34
+  const height = 18
+  const rx = 6
+  return (
+    <g>
+      <rect x={cx - width / 2} y={cy - height / 2} width={width} height={height} rx={rx} fill="#FFFFFF" stroke="#1E293B" strokeWidth="1" />
+      <text x={cx} y={cy + 4} textAnchor="middle" fill="#1E293B" fontSize={11} fontWeight={700}>N/D</text>
+    </g>
+  )
+}
+
 export default function Factors({ data, year, region, countryKey, onOpenDataNotes }) {
   const [dimension, setDimension] = useState('gdp_valid')
   const records = useMemo(() => data.filter((row) => row.year === year && (region === 'Todas' || row.region === region)), [data, year, region])
@@ -50,7 +64,7 @@ export default function Factors({ data, year, region, countryKey, onOpenDataNote
       note: dimension === 'gdp_valid' && y === 2016 ? 'PIB 2016 no confiable en la fuente' : null,
     })
   }
-  const trendMissing = dimension === 'gdp_valid' ? [{ year: 2016, r: 0.615, note: 'PIB 2016 no confiable en la fuente' }] : []
+  const yearTicks = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]
   const mapRangeByDimension = useMemo(() => {
     const keys = ['gdp_valid', 'social', 'hle', 'freedom', 'generosity', 'corruption']
     return Object.fromEntries(keys.map((key) => {
@@ -87,6 +101,7 @@ export default function Factors({ data, year, region, countryKey, onOpenDataNote
   })()
   const showComparabilityNotice = dimension === 'hle' || dimension === 'social'
   const highlightedWeight = weightsData.find((item) => item.key === dimension)
+  const sortedWeights = [...weightsData].sort((a, b) => b.weight - a.weight)
 
   return <>
     <div className="dimension-tabs">
@@ -125,8 +140,15 @@ export default function Factors({ data, year, region, countryKey, onOpenDataNote
           </ScatterChart>
         </ResponsiveContainer>}
       </section>
-      <section className="panel" aria-label={`Evolución anual de la correlación entre ${dimensions[dimension]} y felicidad`}><div className="panel-heading"><div><h2>Evolución de r</h2><p>Relación con el puntaje de felicidad</p></div></div><ResponsiveContainer width="100%" height={220}><LineChart accessibilityLayer data={trend}><CartesianGrid stroke="#E2E8F0" /><XAxis dataKey="year" /><YAxis domain={[0.6, 0.9]} ticks={[0.6, 0.7, 0.8, 0.9]} /><Tooltip content={<CorrelationTrendTooltip />} isAnimationActive={false} /><Line type="monotone" dataKey="r" stroke="#D97706" strokeWidth={3} connectNulls={false} dot={{ r: 3.5, fill: '#D97706' }} isAnimationActive={false}><LabelList dataKey="r" position="top" formatter={(value, index) => (value !== null && (index === 0 || index === trend.length - 1) ? fmtNum(value) : '')} /></Line><Scatter data={trendMissing} fill="var(--text-2)" isAnimationActive={false} shape={(props) => { const { cx, cy } = props; return <g><circle cx={cx} cy={cy} r={4} fill="var(--text-2)" /><text x={cx + 8} y={cy + 4} fill="var(--text-2)" fontSize={12} fontWeight={700}>N/D</text></g> }} /></LineChart></ResponsiveContainer></section>
-      <section className="panel" aria-label={`Peso estandarizado e intervalos de confianza para ${dimensions[dimension]}`}><div className="panel-heading"><div><h2>Peso estandarizado</h2><p>{highlightedWeight ? `Dimensión seleccionada: ${highlightedWeight.name}` : 'Coeficiente con IC 95%'}</p></div></div><ResponsiveContainer width="100%" height={240}><BarChart accessibilityLayer data={[...weightsData].sort((a,b)=>b.weight-a.weight)} layout="vertical" margin={{left:15,right:38}}><CartesianGrid stroke="#E2E8F0"/><XAxis type="number" domain={[0,0.42]} ticks={[0,0.1,0.2,0.3,0.4]}/><YAxis type="category" dataKey="name" width={180} interval={0} tick={{ fontSize: 12 }} /><Tooltip content={<SpanishTooltip nameMap={{ weight: 'Coeficiente', ciLow: 'IC 95% inferior', ciHigh: 'IC 95% superior' }} />} isAnimationActive={false}/><Bar dataKey="weight" name="Coeficiente" isAnimationActive={false}><ErrorBar dataKey="ciError" width={4} strokeWidth={1.5} stroke="var(--text)" /><LabelList dataKey="weight" position="right" formatter={(value)=>fmtNum(value, 3)}/>{[...weightsData].sort((a,b)=>b.weight-a.weight).map((row) => <Cell key={row.key} fill={row.key === dimension ? 'var(--cobalt)' : 'var(--amber)'} />)}</Bar></BarChart></ResponsiveContainer></section>
+      <section className="panel" aria-label={`Evolución anual de la correlación entre ${dimensions[dimension]} y felicidad`}><div className="panel-heading"><div><h2>Evolución de r</h2><p>Relación con el puntaje de felicidad</p></div></div><ResponsiveContainer width="100%" height={220}><LineChart accessibilityLayer data={trend} margin={{ top: 14, right: 12, bottom: 8, left: 2 }}><CartesianGrid stroke="#E2E8F0" /><XAxis type="number" dataKey="year" domain={[2015, 2024]} ticks={yearTicks} allowDecimals={false} /><YAxis domain={[0.6, 0.9]} ticks={[0.6, 0.7, 0.8, 0.9]} /><Tooltip content={<CorrelationTrendTooltip />} isAnimationActive={false} />{dimension === 'gdp_valid' && <ReferenceLine x={2016} stroke="var(--text-2)" strokeDasharray="4 4" />}{dimension === 'gdp_valid' && <ReferenceDot x={2016} y={0.85} r={0} isFront label={<NdBadge />} />}<Line type="monotone" dataKey="r" stroke="#D97706" strokeWidth={3} connectNulls={false} dot={{ r: 3.5, fill: '#D97706' }} isAnimationActive={false}><LabelList dataKey="r" position="top" formatter={(value, index) => (value !== null && (index === 0 || index === trend.length - 1) ? fmtNum(value) : '')} /></Line></LineChart></ResponsiveContainer></section>
+      <section className="panel" aria-label={`Peso estandarizado e intervalos de confianza para ${dimensions[dimension]}`}><div className="panel-heading"><div><h2>Peso estandarizado</h2><p>{highlightedWeight ? `Dimensión seleccionada: ${highlightedWeight.name}` : 'Coeficiente con IC 95%'}</p></div></div><ResponsiveContainer width="100%" height={240}><BarChart accessibilityLayer data={sortedWeights} layout="vertical" margin={{left:15,right:38}}><CartesianGrid stroke="#E2E8F0"/><XAxis type="number" domain={[0,0.42]} ticks={[0,0.1,0.2,0.3,0.4]}/><YAxis type="category" dataKey="name" width={180} interval={0} tick={{ fontSize: 12 }} /><Tooltip content={<SpanishTooltip nameMap={{ weight: 'Coeficiente', ciLow: 'IC 95% inferior', ciHigh: 'IC 95% superior' }} />} isAnimationActive={false}/><Bar dataKey="weight" name="Coeficiente" isAnimationActive={false}><ErrorBar dataKey="ciError" width={4} strokeWidth={1.5} stroke="var(--text)" /><LabelList dataKey="weight" content={(props) => {
+              const { x, y, width, height, payload, value } = props
+              if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(width) || !Number.isFinite(height) || !payload || !Number.isFinite(value) || !Number.isFinite(payload.ciHigh) || !Number.isFinite(payload.weight) || payload.weight === 0) {
+                return null
+              }
+              const ciHighX = x + (payload.ciHigh * width) / payload.weight
+              return <text x={ciHighX + 8} y={y + (height / 2) + 4} fill="var(--text)" fontSize={12}>{fmtNum(value, 2)}</text>
+            }} />{sortedWeights.map((row) => <Cell key={row.key} fill={row.key === dimension ? 'var(--cobalt)' : 'var(--amber)'} />)}</Bar></BarChart></ResponsiveContainer></section>
       <section className="panel quality-note-panel"><div className="panel-heading"><h2>Nota de calidad</h2></div><p>PIB 2016: la fuente trae valores inconsistentes (media 9.69 frente a 5.0-6.4 en otros años). Se excluye y se muestra como N/D.</p><button type="button" className="quality-note-button" onClick={onOpenDataNotes}>Ver notas</button></section>
     </div>
   </>
