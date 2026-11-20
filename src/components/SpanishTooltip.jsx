@@ -1,4 +1,6 @@
 import { countryEs } from '../utils/countryCatalog.js'
+import { regionEs } from '../utils/i18n.js'
+import { fmtNum } from '../utils/format.js'
 
 export function ScatterSpanishTooltip({ active, payload, dimensionName, dimensionKey }) {
   if (!active || !payload?.length) return null
@@ -10,6 +12,9 @@ export function ScatterSpanishTooltip({ active, payload, dimensionName, dimensio
 
   return (
     <div
+      role="status"
+      aria-live="polite"
+      tabIndex={0}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -23,8 +28,9 @@ export function ScatterSpanishTooltip({ active, payload, dimensionName, dimensio
       }}
     >
       <strong>{countryEs(point.country)}</strong>
-      <span>{dimensionName}: {typeof dimensionValue === 'number' ? dimensionValue.toFixed(2) : 'N/D'}</span>
-      <span>Puntaje de felicidad: {typeof score === 'number' ? score.toFixed(2) : 'N/D'}</span>
+      {point.region && <span>Región: {regionEs(point.region)}</span>}
+      <span>{dimensionName}: {fmtNum(dimensionValue)}</span>
+      <span>Puntaje de felicidad: {fmtNum(score)}</span>
     </div>
   )
 }
@@ -49,6 +55,9 @@ export default function SpanishTooltip({ active, payload, label, nameMap = {}, l
   return (
     <div
       className="recharts-es-tooltip"
+      role="status"
+      aria-live="polite"
+      tabIndex={0}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -63,7 +72,7 @@ export default function SpanishTooltip({ active, payload, label, nameMap = {}, l
     >
       {label !== undefined && label !== null && <strong>{labelPrefix}{label}</strong>}
       {rows.map((row) => (
-        <span key={row.name}>{row.name}: {row.value === null ? 'N/D' : row.value.toFixed(2)}</span>
+        <span key={row.name}>{row.name}: {fmtNum(row.value)}</span>
       ))}
     </div>
   )

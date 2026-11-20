@@ -1,56 +1,133 @@
 import { useMemo, useState } from 'react'
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, ReferenceLine, BarChart, Bar, LabelList } from 'recharts'
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, BarChart, Bar, LabelList, ErrorBar, Cell } from 'recharts'
 import { pearsonCorrelation } from '../utils/metrics.js'
-import { regionEs } from '../utils/i18n.js'
+import { fmtNum } from '../utils/format.js'
 import SpanishTooltip, { ScatterSpanishTooltip } from './SpanishTooltip.jsx'
+import MapChart from './MapChart.jsx'
 
 const dimensions = {
   gdp_valid: 'PIB per cápita', social: 'Apoyo social', hle: 'Esperanza de vida sana',
-  freedom: 'Libertad', generosity: 'Generosidad', corruption: 'Corrupción percibida'
+  freedom: 'Libertad', generosity: 'Generosidad', corruption: 'Corrupción (menos percibida)'
 }
-const regionColors = ['var(--amber)','var(--cobalt)','var(--yellow)','var(--text-2)','var(--amber)','var(--cobalt)','var(--yellow)','var(--text-2)','var(--amber)','var(--cobalt)']
 
-export default function Factors({ data, year, region }) {
+const weightsData = [
+  { key: 'social', name: 'Apoyo social', weight: 0.344, ciLow: 0.296, ciHigh: 0.393 },
+  { key: 'gdp_valid', name: 'PIB per cápita', weight: 0.260, ciLow: 0.201, ciHigh: 0.319 },
+  { key: 'hle', name: 'Esperanza de vida sana', weight: 0.238, ciLow: 0.177, ciHigh: 0.299 },
+  { key: 'freedom', name: 'Libertad', weight: 0.217, ciLow: 0.185, ciHigh: 0.249 },
+  { key: 'corruption', name: 'Corrupción (menos percibida)', weight: 0.087, ciLow: 0.053, ciHigh: 0.122 },
+  { key: 'generosity', name: 'Generosidad', weight: 0.048, ciLow: 0.017, ciHigh: 0.078 },
+].map((row) => ({ ...row, ciError: [row.weight - row.ciLow, row.ciHigh - row.weight] }))
+
+function CorrelationTrendTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null
+  const point = payload[0]?.payload
+  if (point?.note) {
+    return (
+      <div className="recharts-es-tooltip" style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '10px 14px', boxShadow: '0 4px 12px rgba(15,23,42,0.08)', color: '#1E293B' }}>
+        <strong>Año {label}</strong>
+        <span>{point.note}</span>
+      </div>
+    )
+  }
+
+  return <SpanishTooltip active={active} payload={payload} label={label} labelPrefix="Año " nameMap={{ r: 'Correlación (r)' }} />
+}
+
+export default function Factors({ data, year, region, countryKey, onOpenDataNotes }) {
   const [dimension, setDimension] = useState('gdp_valid')
   const records = useMemo(() => data.filter((row) => row.year === year && (region === 'Todas' || row.region === region)), [data, year, region])
-  const points = records.filter((row) => Number.isFinite(row.score) && Number.isFinite(row[dimension]))
+  const gdpNotComparable = dimension === 'gdp_valid' && year === 2016
+  const points = records.filter((row) => Number.isFinite(row.score) && Number.isFinite(row[dimension]) && !gdpNotComparable)
   const correlation = pearsonCorrelation(data, year, region, dimension)
-  const regions = [...new Set(records.map((row) => row.region))]
-  const rByRegion = regions.map((name) => {
-    const subset = data.filter((row) => row.year === year && row.region === name)
-    const r = pearsonCorrelation(subset, year, 'Todas', dimension)
-    return { name: regionEs(name), r: r?.toFixed(3) ?? 'N/D', count: subset.length }
-  })
+  const correlationLabel = correlation === null ? 'N/D' : fmtNum(correlation)
   const trend = []
   for (let y = 2015; y <= 2024; y++) {
     const r = pearsonCorrelation(data, y, region, dimension)
-    trend.push({ year: y, r: r === null ? null : r })
+    trend.push({
+      year: y,
+      r: (dimension === 'gdp_valid' && y === 2016) || r === null ? null : r,
+      note: dimension === 'gdp_valid' && y === 2016 ? 'PIB 2016 no confiable en la fuente' : null,
+    })
   }
-
-  if (year === 2016 && dimension === 'gdp_valid') {
-    return <div className="empty-state"><h2>PIB no comparable en 2016</h2><p>Esta dimensión tiene valores N/D debido a la armonización del dataset.</p></div>
-  }
+  const trendMissing = dimension === 'gdp_valid' ? [{ year: 2016, r: 0.615, note: 'PIB 2016 no confiable en la fuente' }] : []
+  const mapRangeByDimension = useMemo(() => {
+    const keys = ['gdp_valid', 'social', 'hle', 'freedom', 'generosity', 'corruption']
+    return Object.fromEntries(keys.map((key) => {
+      const values = data
+        .filter((row) => Number.isFinite(row[key]) && !(key === 'gdp_valid' && row.year === 2016))
+        .map((row) => row[key])
+      if (!values.length) return [key, [0, 1]]
+      return [key, [Math.min(...values), Math.max(...values)]]
+    }))
+  }, [data])
+  const mapRange = mapRangeByDimension[dimension] ?? [0, 1]
+  const xDomain = (() => {
+    if (dimension === 'gdp_valid') return [0, 10]
+    if (dimension === 'hle') {
+      const values = points.map((point) => point.hle).filter(Number.isFinite)
+      if (!values.length) return [0, 1]
+      return [Math.min(...values), Math.max(...values)]
+    }
+    return [0, 1]
+  })()
+  const regression = (() => {
+    if (points.length < 2) return []
+    const meanX = points.reduce((sum, point) => sum + point[dimension], 0) / points.length
+    const meanY = points.reduce((sum, point) => sum + point.score, 0) / points.length
+    const covariance = points.reduce((sum, point) => sum + (point[dimension] - meanX) * (point.score - meanY), 0)
+    const varianceX = points.reduce((sum, point) => sum + (point[dimension] - meanX) ** 2, 0)
+    if (!varianceX) return []
+    const slope = covariance / varianceX
+    const intercept = meanY - slope * meanX
+    return [
+      { [dimension]: xDomain[0], score: slope * xDomain[0] + intercept },
+      { [dimension]: xDomain[1], score: slope * xDomain[1] + intercept },
+    ]
+  })()
+  const showComparabilityNotice = dimension === 'hle' || dimension === 'social'
+  const highlightedWeight = weightsData.find((item) => item.key === dimension)
 
   return <>
     <div className="dimension-tabs">
-      {[['PIB', 'gdp_valid'], ['Social', 'social'], ['Vida', 'hle'], ['Libertad', 'freedom'], ['Generosidad', 'generosity'], ['Corrupción', 'corruption']].map(([label, key]) => (
+      {[['PIB per cápita', 'gdp_valid'], ['Apoyo social', 'social'], ['Esperanza de vida sana', 'hle'], ['Libertad', 'freedom'], ['Generosidad', 'generosity'], ['Corrupción (menos percibida)', 'corruption']].map(([label, key]) => (
         <button key={key} type="button" className={dimension === key ? 'active' : ''} onClick={() => setDimension(key)}>{label}</button>
       ))}
     </div>
     <div className="dashboard-grid factors-grid">
-      <section className="panel scatter-panel">
-        <div className="panel-heading"><div><h2>{dimensions[dimension]} vs felicidad</h2><p>Color por región · {year}</p></div></div>
-        <ResponsiveContainer width="100%" height={330}>
-          <ScatterChart margin={{ top: 10, right: 18, bottom: 15, left: 0 }}>
-            <CartesianGrid stroke="#E2E8F0" /><XAxis type="number" dataKey={dimension} name={dimensions[dimension]} /><YAxis type="number" dataKey="score" name="Puntaje" domain={[0, 8]} /><Tooltip content={<ScatterSpanishTooltip dimensionName={dimensions[dimension]} dimensionKey={dimension} />} isAnimationActive={false} />
-            {regions.map((name, index) => <Scatter key={name} name={regionEs(name)} data={points.filter((row) => row.region === name)} fill={regionColors[index % regionColors.length]} />)}
-          </ScatterChart>
-        </ResponsiveContainer>
+      <section className="panel factor-map-panel" aria-label={`Mapa de ${dimensions[dimension]} para ${year}`}>
+        <div className="panel-heading"><div><h2>Mapa: {dimensions[dimension]} ({year})</h2><p>{gdpNotComparable ? 'N/D para esta edición del PIB' : 'Escala fija para todos los años'}</p></div></div>
+        <MapChart
+          records={records}
+          year={year}
+          valueKey={dimension}
+          valueRange={mapRange}
+          legendMinLabel="Menor valor"
+          legendMaxLabel="Mayor valor"
+          tooltipMetricLabel={dimensions[dimension]}
+          tooltipMode="factor"
+          forceNoData={gdpNotComparable}
+        />
+        {gdpNotComparable && <p className="comparability-note">PIB 2016 no confiable en la fuente: el mapa se muestra como N/D.</p>}
       </section>
-      <section className="panel correlation-panel"><div className="panel-heading"><h2>Correlación Pearson</h2></div><strong className="correlation-big">{correlation === null ? 'N/D' : `r = ${correlation.toFixed(2)}`}</strong><p>{dimension === 'gdp_valid' ? 'PIB per cápita' : dimensions[dimension]}</p></section>
-      <section className="panel"><div className="panel-heading"><h2>Resumen por región</h2></div><div className="table-scroll"><table><thead><tr><th>Región</th><th>r</th><th>Países</th></tr></thead><tbody>{rByRegion.map((row) => <tr key={row.name}><td>{row.name}</td><td>{row.r}</td><td>{row.count}</td></tr>)}</tbody></table></div></section>
-      <section className="panel"><div className="panel-heading"><div><h2>Evolución de r</h2><p>Relación con el puntaje de felicidad</p></div></div><ResponsiveContainer width="100%" height={220}><LineChart data={trend}><CartesianGrid stroke="#E2E8F0" /><XAxis dataKey="year" /><YAxis domain={[0, 1]} ticks={[0, 0.25, 0.5, 0.75, 1]} /><Tooltip content={<SpanishTooltip labelPrefix="Año " nameMap={{ r: 'Correlación (r)' }} />} isAnimationActive={false} /><ReferenceLine y={0} stroke="#475569" /><Line type="monotone" dataKey="r" stroke="#D97706" strokeWidth={3} dot isAnimationActive={false}><LabelList dataKey="r" position="top" formatter={(value) => value === null ? 'N/D' : Number(value).toFixed(2)} /></Line></LineChart></ResponsiveContainer></section>
-      <section className="panel"><div className="panel-heading"><h2>Peso estandarizado</h2></div><ResponsiveContainer width="100%" height={220}><BarChart data={[{name:'Apoyo social',weight:0.34},{name:'PIB per cápita',weight:0.26},{name:'Esperanza de vida',weight:0.24},{name:'Libertad',weight:0.22},{name:'Corrupción',weight:0.09},{name:'Generosidad',weight:0.05}].sort((a,b)=>b.weight-a.weight)} layout="vertical" margin={{left:15,right:38}}><CartesianGrid stroke="#E2E8F0"/><XAxis type="number" domain={[0,0.4]} ticks={[0,0.1,0.2,0.3,0.4]}/><YAxis type="category" dataKey="name" width={125} interval={0}/><Tooltip content={<SpanishTooltip nameMap={{ weight: 'Peso estandarizado' }} />} isAnimationActive={false}/><Bar dataKey="weight" name="Peso estandarizado" fill="#D97706" isAnimationActive={false}><LabelList dataKey="weight" position="right" formatter={(value)=>Number(value).toFixed(2)}/></Bar></BarChart></ResponsiveContainer></section>
+      <section className="panel scatter-panel" aria-label={`Dispersión entre ${dimensions[dimension]} y puntaje de felicidad para ${year}. Correlación ${correlationLabel}`}>
+        <div className="panel-heading"><div><h2>{dimensions[dimension]} vs felicidad</h2><p>{year}</p></div><span className="r-chip">r = {correlationLabel}</span></div>
+        {showComparabilityNotice && <p className="comparability-note">Los niveles de esta variable cambian entre ediciones: compara países dentro del mismo año.</p>}
+        {gdpNotComparable ? <div className="not-comparable"><strong>N/D</strong><p>Sin datos de PIB para 2016. Elige otro año u otra dimensión.</p><button type="button" onClick={onOpenDataNotes}>Ver notas</button></div> : <ResponsiveContainer width="100%" height={330}>
+          <ScatterChart accessibilityLayer margin={{ top: 10, right: 18, bottom: 15, left: 10 }}>
+            <CartesianGrid stroke="#E2E8F0" /><XAxis type="number" dataKey={dimension} name={dimensions[dimension]} domain={xDomain} /><YAxis type="number" dataKey="score" name="Puntaje" domain={[2, 8]} ticks={[2, 4, 6, 8]} /><Tooltip content={<ScatterSpanishTooltip dimensionName={dimensions[dimension]} dimensionKey={dimension} />} isAnimationActive={false} />
+            <Scatter data={points} name="Puntaje" fill="var(--amber)" isAnimationActive={false} shape={(props) => {
+              const { cx, cy, payload } = props
+              const selected = payload.country_key === countryKey
+              return <circle cx={cx} cy={cy} r={selected ? 6 : 3.5} fill={selected ? 'var(--cobalt)' : 'var(--amber)'} opacity="0.82" />
+            }} />
+            <Scatter data={regression} line={{ stroke: 'var(--text)', strokeWidth: 2 }} fill="transparent" shape={() => null} isAnimationActive={false} />
+          </ScatterChart>
+        </ResponsiveContainer>}
+      </section>
+      <section className="panel" aria-label={`Evolución anual de la correlación entre ${dimensions[dimension]} y felicidad`}><div className="panel-heading"><div><h2>Evolución de r</h2><p>Relación con el puntaje de felicidad</p></div></div><ResponsiveContainer width="100%" height={220}><LineChart accessibilityLayer data={trend}><CartesianGrid stroke="#E2E8F0" /><XAxis dataKey="year" /><YAxis domain={[0.6, 0.9]} ticks={[0.6, 0.7, 0.8, 0.9]} /><Tooltip content={<CorrelationTrendTooltip />} isAnimationActive={false} /><Line type="monotone" dataKey="r" stroke="#D97706" strokeWidth={3} connectNulls={false} dot={{ r: 3.5, fill: '#D97706' }} isAnimationActive={false}><LabelList dataKey="r" position="top" formatter={(value, index) => (value !== null && (index === 0 || index === trend.length - 1) ? fmtNum(value) : '')} /></Line><Scatter data={trendMissing} fill="var(--text-2)" isAnimationActive={false} shape={(props) => { const { cx, cy } = props; return <g><circle cx={cx} cy={cy} r={4} fill="var(--text-2)" /><text x={cx + 8} y={cy + 4} fill="var(--text-2)" fontSize={12} fontWeight={700}>N/D</text></g> }} /></LineChart></ResponsiveContainer></section>
+      <section className="panel" aria-label={`Peso estandarizado e intervalos de confianza para ${dimensions[dimension]}`}><div className="panel-heading"><div><h2>Peso estandarizado</h2><p>{highlightedWeight ? `Dimensión seleccionada: ${highlightedWeight.name}` : 'Coeficiente con IC 95%'}</p></div></div><ResponsiveContainer width="100%" height={240}><BarChart accessibilityLayer data={[...weightsData].sort((a,b)=>b.weight-a.weight)} layout="vertical" margin={{left:15,right:38}}><CartesianGrid stroke="#E2E8F0"/><XAxis type="number" domain={[0,0.42]} ticks={[0,0.1,0.2,0.3,0.4]}/><YAxis type="category" dataKey="name" width={180} interval={0} tick={{ fontSize: 12 }} /><Tooltip content={<SpanishTooltip nameMap={{ weight: 'Coeficiente', ciLow: 'IC 95% inferior', ciHigh: 'IC 95% superior' }} />} isAnimationActive={false}/><Bar dataKey="weight" name="Coeficiente" isAnimationActive={false}><ErrorBar dataKey="ciError" width={4} strokeWidth={1.5} stroke="var(--text)" /><LabelList dataKey="weight" position="right" formatter={(value)=>fmtNum(value, 3)}/>{[...weightsData].sort((a,b)=>b.weight-a.weight).map((row) => <Cell key={row.key} fill={row.key === dimension ? 'var(--cobalt)' : 'var(--amber)'} />)}</Bar></BarChart></ResponsiveContainer></section>
+      <section className="panel quality-note-panel"><div className="panel-heading"><h2>Nota de calidad</h2></div><p>PIB 2016: la fuente trae valores inconsistentes (media 9.69 frente a 5.0-6.4 en otros años). Se excluye y se muestra como N/D.</p><button type="button" className="quality-note-button" onClick={onOpenDataNotes}>Ver notas</button></section>
     </div>
   </>
 }

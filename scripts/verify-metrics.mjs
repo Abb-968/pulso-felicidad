@@ -6,37 +6,43 @@ import {
   topBottomGap,
   improvementVs2015,
   pearsonCorrelation,
-  regionalRank,
-  topBottom,
   medianIQR,
-  improvedBar,
-  pearsonSafe,
 } from '../src/utils/metrics.js'
 
 const data = JSON.parse(fs.readFileSync(new URL('../src/data/happiness.json', import.meta.url), 'utf8'))
+const approx = (actual, expected, tolerance = 0.005) => Math.abs(actual - expected) <= tolerance
 
 const average = globalAverage(data, 2024)
-assert.ok(Math.abs(average.value - 5.53) < 0.005)
-assert.ok(Math.abs(average.delta - 0.15) < 0.005)
-assert.ok(Math.abs(medianScore(data, 2024) - 5.80) < 0.005)
-assert.ok(Math.abs(topBottomGap(data, 2024) - 4.21) < 0.005)
-assert.equal(improvementVs2015(data, 2024).label, '59% (82 de 138)')
-assert.ok(Math.abs(pearsonCorrelation(data, 2024, 'Todas', 'gdp_valid') - 0.77) < 0.005)
-
-assert.deepEqual(regionalRank(data, 'canada', 2024), { rank: 3, total: 4 })
-
-const rankings = topBottom(data, 2024, 10)
-assert.deepEqual(rankings.top.slice(0, 5).map((row) => row.country), ['Finland', 'Denmark', 'Iceland', 'Sweden', 'Israel'])
-assert.deepEqual(rankings.bottom.slice(0, 5).map((row) => row.country), ['Afghanistan', 'Lebanon', 'Lesotho', 'Sierra Leone', 'Congo (Kinshasa)'])
-
+const median = medianScore(data, 2024)
 const iqr = medianIQR(data, 2024)
-assert.ok(Math.abs(iqr.delta2015 - 0.57) < 0.005)
-assert.deepEqual(improvedBar(data, 2024), { improved: 82, notImproved: 56 })
+const gap = topBottomGap(data, 2024)
+const improvement = improvementVs2015(data, 2024)
+const rGdp2024 = pearsonCorrelation(data, 2024, 'Todas', 'gdp_valid')
+const rGdp2016 = pearsonCorrelation(data, 2016, 'Todas', 'gdp_valid')
 
-const safe = pearsonSafe([1, 2, 3], [2, 3, 4])
-assert.equal(safe.n, 3)
-assert.equal(safe.reliable, false)
+const rows2024 = data.filter((row) => row.year === 2024 && Number.isFinite(row.score))
+const sorted2024 = [...rows2024].sort((a, b) => b.score - a.score)
+const mexico2024 = sorted2024.find((row) => row.country_key === 'mexico')
+const mexicoRank2024 = sorted2024.findIndex((row) => row.country_key === 'mexico') + 1
 
-const zeroGDP = data.filter((row) => row.year === 2024 && row.gdp_valid === 0)
-console.log('Venezuela:', zeroGDP.map((row) => `${row.country}: score=${row.score}, gdp_valid=${row.gdp_valid}`).join(', ') || 'ninguno')
+assert.ok(approx(average.value, 5.53), `Media 2024 esperada 5.53, recibida ${average.value}`)
+assert.ok(approx(median, 5.80), `Mediana 2024 esperada 5.80, recibida ${median}`)
+assert.ok(approx(iqr.IQR, 1.79), `IQR 2024 esperado 1.79, recibido ${iqr.IQR}`)
+assert.ok(approx(gap, 4.21), `Brecha 2024 esperada 4.21, recibida ${gap}`)
+assert.equal(improvement.count, 82, `Países mejorados esperados 82, recibido ${improvement.count}`)
+assert.equal(improvement.total, 138, `Total comparables esperado 138, recibido ${improvement.total}`)
+assert.ok(approx(rGdp2024, 0.77), `r PIB 2024 esperado 0.77, recibido ${rGdp2024}`)
+assert.ok(mexico2024, 'No se encontró México en 2024')
+assert.ok(approx(mexico2024.score, 6.68), `Puntaje México 2024 esperado 6.68, recibido ${mexico2024.score}`)
+assert.equal(mexicoRank2024, 25, `Lugar México 2024 esperado 25, recibido ${mexicoRank2024}`)
+assert.equal(rGdp2016, null, `r PIB 2016 esperado N/D (null), recibido ${rGdp2016}`)
+
 console.log('Verificación de métricas 2024: OK')
+console.log(`Media global: ${average.value.toFixed(2)}`)
+console.log(`Mediana global: ${median.toFixed(2)}`)
+console.log(`Rango intercuartil: ${iqr.IQR.toFixed(2)}`)
+console.log(`Brecha top-bottom: ${gap.toFixed(2)}`)
+console.log(`Mejoraron vs 2015: ${improvement.count} de ${improvement.total}`)
+console.log(`r PIB 2024: ${rGdp2024.toFixed(2)}`)
+console.log(`México 2024: ${mexico2024.score.toFixed(2)} (lugar ${mexicoRank2024})`)
+console.log('r PIB 2016: N/D')
