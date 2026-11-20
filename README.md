@@ -12,6 +12,8 @@ Dashboard interactivo de tipo **táctico** desarrollado en **React** (Vite + Rec
 
 Incluye un pipeline reproducible de limpieza y auditoría en **Python**, almacenamiento relacional en **Supabase (PostgreSQL)** y despliegue web público.
 
+🌐 **Dashboard en vivo:** [https://abb-968.github.io/pulso-felicidad/](https://abb-968.github.io/pulso-felicidad/)
+
 ## 📄 Documentación y entregables
 - **Fase 1 — Limpieza, auditoría y análisis exploratorio:** [`docs/fase1-justificacion.pdf`](docs/fase1-justificacion.pdf)
 - **Fase 2 — Diseño del dashboard, KPIs, paleta y wireframes:** [`docs/fase2-justificacion.pdf`](docs/fase2-justificacion.pdf)
