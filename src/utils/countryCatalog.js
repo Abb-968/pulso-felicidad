@@ -20,6 +20,7 @@ const COUNTRY_NAME_ES = Object.freeze({
   'Congo (Kinshasa)': 'República Democrática del Congo',
   'Congo (Brazzaville)': 'República del Congo',
   'Palestinian Territories': 'Territorios Palestinos',
+  Togo: 'Togo',
   Taiwan: 'Taiwán',
   'Hong Kong': 'Hong Kong',
   'Eswatini': 'Esuatini',
