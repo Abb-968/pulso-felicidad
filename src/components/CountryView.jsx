@@ -15,7 +15,7 @@ const labels = {
   corruption: 'Corrupción (menos percibida)',
 }
 
-export default function CountryView({ data, year, countryKey, setCountryKey, search }) {
+export default function CountryView({ data, year, countryKey, setCountryKey, search, onRecover }) {
   const countries = useMemo(() => [...new Map(data.map((row) => [row.country_key, row.country])).entries()].map(([key, name]) => ({ key, name, nameEs: countryEs(name) })).sort((a, b) => a.nameEs.localeCompare(b.nameEs, 'es')), [data])
   const current = data.find((row) => row.year === year && row.country_key === countryKey)
   const base = data.find((row) => row.year === 2015 && row.country_key === countryKey)
@@ -75,7 +75,10 @@ export default function CountryView({ data, year, countryKey, setCountryKey, sea
     return ranked.slice(start, start + 8)
   }, [data, year, current, countryKey])
 
-  if (!current) return <div className="empty-state"><h2>País no disponible</h2><p>No hay observación para esta combinación de país y año.</p></div>
+  if (!current) return <>
+    <div className="country-selector"><label>País seleccionado<select value={countryKey} onChange={(event) => setCountryKey(event.target.value)}>{(search ? filteredSearch : countries).map((row) => <option key={row.key} value={row.key}>{row.nameEs}</option>)}</select></label></div>
+    <div className="empty-state"><h2>País no disponible</h2><p>No hay observación para esta combinación de país y año.</p><button type="button" className="recovery-button" onClick={onRecover}>Limpiar filtros</button></div>
+  </>
 
   const change = base ? current.score - base.score : null
   const regionDiff = current.score - regionAverage

@@ -44,6 +44,16 @@ export default function App() {
     setYear(2024)
     setRegion('Todas')
     setSearch('')
+    if (tab === 'Mi país') {
+      setCountryKey('mexico')
+    }
+  }
+
+  const recoverCountryView = () => {
+    setYear(2024)
+    setRegion('Todas')
+    setSearch('')
+    setCountryKey('mexico')
   }
 
   const openDataNotes = () => {
@@ -85,8 +95,8 @@ export default function App() {
           <div className="empty-state"><span className="empty-icon">◎</span><h2>No hay países con estos filtros</h2><p>Prueba otra región, año o nombre de país.</p><button type="button" onClick={clearFilters}>Limpiar filtros</button></div>
         ) : tab === 'Panorama' ? <Panorama data={happiness} year={year} region={region} onSelectCountry={selectCountry} countryKey={countryKey} onOpenDataNotes={openDataNotes} />
           : tab === 'Explorar factores' ? <Factors data={happiness} year={year} region={region} countryKey={countryKey} onOpenDataNotes={openDataNotes} />
-            : tab === 'Mi país' ? <CountryView data={happiness} year={year} countryKey={countryKey} setCountryKey={setCountryKey} search={search} />
-              : <CountryView data={happiness} year={year} countryKey={countryKey} setCountryKey={setCountryKey} search={search} />}
+            : tab === 'Mi país' ? <CountryView data={happiness} year={year} countryKey={countryKey} setCountryKey={setCountryKey} search={search} onRecover={recoverCountryView} />
+              : <CountryView data={happiness} year={year} countryKey={countryKey} setCountryKey={setCountryKey} search={search} onRecover={recoverCountryView} />}
       </main>
 
       {isDataNotesOpen && !isLoading && !loadError && (
