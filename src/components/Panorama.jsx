@@ -60,8 +60,8 @@ export function KpiCards({ data, year, region }) {
 
   const sparkline = (() => {
     if (meanTrend.length < 2) return null
-    const width = 180
-    const height = 44
+    const width = 110
+    const height = 36
     const min = Math.min(...meanTrend.map((point) => point.mean))
     const max = Math.max(...meanTrend.map((point) => point.mean))
     const span = max - min || 1
@@ -80,14 +80,20 @@ export function KpiCards({ data, year, region }) {
 
   return <div className="kpi-grid">
     <article className="kpi-card main-kpi" aria-label={`Puntaje promedio global ${year}: ${fmtNum(mean)}, ${meanDeltaLabel}`}>
-      <span>PUNTAJE PROMEDIO DE FELICIDAD · {year}</span>
-      <strong className="kpi-value-main">{fmtNum(mean)}</strong>
-      <small className={`kpi-variation ${meanDelta < 0 ? 'negative' : 'positive'}`}>{year === 2015 ? 'Año base' : `▲ ${fmtSigned(meanDelta)} vs 2015`}</small>
-      <div className="kpi-spark" aria-label="Tendencia media 2015 a 2024">
-        {sparkline && <svg viewBox="0 0 180 44" preserveAspectRatio="none"><polyline points={sparkline.points} fill="none" stroke="var(--text)" strokeWidth="3" /><circle cx={sparkline.endX} cy={sparkline.endY} r="4" fill="var(--text)" /></svg>}
+      <div className="main-kpi-layout">
+        <div className="main-kpi-left">
+          <span>PUNTAJE PROMEDIO DE FELICIDAD · {year}</span>
+          <strong className="kpi-value-main">{fmtNum(mean)}</strong>
+          <small>escala de 0 a 10 · {fmtInt(records.length)} países</small>
+        </div>
+        <div className="main-kpi-right">
+          <small className={`kpi-variation ${meanDelta < 0 ? 'negative' : 'positive'}`}>{year === 2015 ? 'Año base' : `▲ ${fmtSigned(meanDelta)} vs 2015`}</small>
+          <div className="kpi-spark" aria-label="Tendencia media 2015 a 2024">
+            {sparkline && <svg viewBox="0 0 110 36" preserveAspectRatio="none"><polyline points={sparkline.points} fill="none" stroke="var(--text)" strokeWidth="2.5" /><circle cx={sparkline.endX} cy={sparkline.endY} r="3" fill="var(--text)" /></svg>}
+          </div>
+          <small className="kpi-period">2015 → 2024</small>
+        </div>
       </div>
-      <small className="kpi-period">2015 → 2024</small>
-      <small>escala de 0 a 10 · {fmtInt(records.length)} países</small>
     </article>
     <article className="kpi-card" aria-label={`Mediana global ${year}: ${fmtNum(median)}, ${medianDeltaLabel}`}><span>MEDIANА GLOBAL</span><strong>{fmtNum(median)}</strong><small className={`kpi-variation ${medianDelta < 0 ? 'negative' : 'positive'}`}>{year === 2015 ? 'Año base' : `sube ${fmtSigned(medianDelta)} vs 2015`}</small><small>el país del medio de la lista · rango intercuartil {fmtNum(iqrStats.IQR)}</small></article>
     <article className="kpi-card" aria-label={`Brecha entre top 10 y bottom 10 en ${year}: ${fmtNum(gap)}`}><span>BRECHA TOP 10 − BOTTOM 10</span><strong>{fmtNum(gap)}</strong><small>distancia entre los 10 más felices y los 10 menos felices (puntos)</small></article>
