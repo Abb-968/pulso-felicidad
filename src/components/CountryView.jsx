@@ -156,10 +156,10 @@ export default function CountryView({ data, year, countryKey, setCountryKey, sea
           label: line.label,
           color: line.color,
           value,
+          isPrimary: line.dataKey === 'country',
         }
       })
       .filter(Boolean)
-      .sort((a, b) => b.value - a.value)
   }, [evolution, evolutionLines])
 
   const compareCandidates = countries.filter((row) => row.key !== countryKey && !activeCompareCountryKeys.includes(row.key))
@@ -175,23 +175,69 @@ export default function CountryView({ data, year, countryKey, setCountryKey, sea
   const regionLabel = `${regionEs(current.region).toUpperCase()} · PUNTAJE ${year}`
   const direction = change < 0 ? '▼' : '▲'
   const canAddComparison = compareSeries.length < MAX_COUNTRIES_IN_EVOLUTION
+  const selectedCountryLabel = countryEs(current.country)
 
-  const EndLabels = ({ width, margin, yAxisMap }) => {
+  const EndLabels = ({ width, height, margin, xAxisMap, yAxisMap }) => {
+    const xAxisEntry = xAxisMap ? Object.values(xAxisMap)[0] : null
     const yAxisEntry = yAxisMap ? Object.values(yAxisMap)[0] : null
-    if (!yAxisEntry?.scale || !Number.isFinite(width) || !endLabels.length) return null
+    if (!xAxisEntry?.scale || !yAxisEntry?.scale || !Number.isFinite(width) || !Number.isFinite(height) || !endLabels.length) return null
 
+    const scaleX = xAxisEntry.scale
     const scaleY = yAxisEntry.scale
-    const minGap = 15
-    let previousY = -Infinity
-    const positionedLabels = endLabels.map((item) => {
-      const rawY = scaleY(item.value)
-      const adjustedY = previousY === -Infinity ? rawY : Math.max(rawY, previousY + minGap)
-      previousY = adjustedY
-      return { ...item, y: adjustedY }
-    })
+    const rawX2024 = scaleX(2024)
+    if (!Number.isFinite(rawX2024)) return null
 
-    const labelX = width - (margin?.right ?? 145) + 8
-    return <g>{positionedLabels.map((item) => <text key={item.dataKey} x={labelX} y={item.y + 4} fill={item.color} fontSize={12} translate="no" className="notranslate">{`${item.label} ${fmtNum(item.value)}`}</text>)}</g>
+    const x2024 = typeof scaleX.bandwidth === 'function' ? rawX2024 + scaleX.bandwidth() / 2 : rawX2024
+    const topBound = (margin?.top ?? 0) + 8
+    const bottomBound = height - (margin?.bottom ?? 0) - 8
+    const minGap = 16
+
+    const labelsByHeight = endLabels
+      .map((item) => ({
+        ...item,
+        rawY: scaleY(item.value),
+      }))
+      .filter((item) => Number.isFinite(item.rawY))
+      .sort((a, b) => a.rawY - b.rawY)
+
+    if (!labelsByHeight.length || topBound >= bottomBound) return null
+
+    const adjustedYs = labelsByHeight.map((item) => item.rawY)
+    for (let index = 0; index < adjustedYs.length; index += 1) {
+      const minimumAllowed = index === 0 ? topBound : adjustedYs[index - 1] + minGap
+      adjustedYs[index] = Math.max(adjustedYs[index], minimumAllowed)
+    }
+
+    const lastIndex = adjustedYs.length - 1
+    if (adjustedYs[lastIndex] > bottomBound) {
+      adjustedYs[lastIndex] = bottomBound
+      for (let index = lastIndex - 1; index >= 0; index -= 1) {
+        adjustedYs[index] = Math.min(adjustedYs[index], adjustedYs[index + 1] - minGap)
+      }
+      if (adjustedYs[0] < topBound) {
+        adjustedYs[0] = topBound
+        for (let index = 1; index < adjustedYs.length; index += 1) {
+          adjustedYs[index] = Math.max(adjustedYs[index], adjustedYs[index - 1] + minGap)
+        }
+      }
+    }
+
+    const positionedLabels = labelsByHeight.map((item, index) => ({
+      ...item,
+      finalY: adjustedYs[index],
+    }))
+
+    const guideEndX = x2024 + 10
+    const textX = x2024 + 14
+
+    return <g>{positionedLabels.map((item) => {
+      const label = `${item.label} ${item.value.toFixed(2)}`
+      return <g key={item.dataKey}>
+        <line x1={x2024} y1={item.rawY} x2={guideEndX} y2={item.finalY} stroke={item.color} strokeWidth={1.2} />
+        <text x={textX} y={item.finalY + 4} fill={item.color} fontSize={12} fontWeight={item.isPrimary ? 700 : 500} translate="no" className="notranslate">{label}</text>
+      </g>
+    })
+    }</g>
   }
 
   return <>
@@ -207,9 +253,9 @@ export default function CountryView({ data, year, countryKey, setCountryKey, sea
         const key = event.target.value
         if (!key || !canAddComparison) return
         setCompareCountryKeys((previous) => [...previous, key])
-      }} disabled={!canAddComparison} translate="no" className="notranslate"><option value="">{canAddComparison ? 'Seleccionar país...' : 'Máximo alcanzado (3 países)'}</option>{compareCandidates.map((row) => <option key={row.key} value={row.key} translate="no" className="notranslate">{row.nameEs}</option>)}</select></label>{compareSeries.length > 0 && <div className="country-compare-tags">{compareSeries.map((series) => <button key={series.key} type="button" className="country-compare-tag" onClick={() => setCompareCountryKeys((previous) => previous.filter((key) => key !== series.key))} translate="no"><span className="dot" style={{ background: series.color }} aria-hidden="true" />{series.label} ×</button>)}</div>}</div><ResponsiveContainer width="100%" height={300}><LineChart accessibilityLayer data={evolution} margin={{ top: 16, right: 145, left: 8, bottom: 8 }}><CartesianGrid stroke="var(--border)" /><XAxis dataKey="year" /><YAxis domain={yDomain} /><Tooltip content={<SpanishTooltip labelPrefix="Año " nameMap={evolutionNameMap} />} isAnimationActive={false} />{evolutionLines.map((line) => <Line key={line.dataKey} dataKey={line.dataKey} stroke={line.color} strokeWidth={line.strokeWidth} strokeDasharray={line.strokeDasharray} dot={false} isAnimationActive={false} />)}<Customized component={EndLabels} /></LineChart></ResponsiveContainer></section>
+      }} disabled={!canAddComparison} translate="no" className="notranslate"><option value="">{canAddComparison ? 'Seleccionar país...' : 'Máximo alcanzado (3 países)'}</option>{compareCandidates.map((row) => <option key={row.key} value={row.key} translate="no" className="notranslate">{row.nameEs}</option>)}</select></label><div className="country-compare-tags"><span className="country-compare-tag" translate="no"><span className="dot" style={{ background: '#D97706' }} aria-hidden="true" />{selectedCountryLabel}</span>{compareSeries.map((series) => <button key={series.key} type="button" className="country-compare-tag" onClick={() => setCompareCountryKeys((previous) => previous.filter((key) => key !== series.key))} translate="no"><span className="dot" style={{ background: series.color }} aria-hidden="true" />{series.label} ×</button>)}<span className="country-compare-tag" aria-label="Leyenda de región" style={{ opacity: 0.95 }}><span style={{ color: '#1E293B', fontWeight: 700, letterSpacing: '0.06em' }} aria-hidden="true">— —</span> Región</span><span className="country-compare-tag" aria-label="Leyenda de mundo" style={{ opacity: 0.95 }}><span style={{ color: '#475569', fontWeight: 700, letterSpacing: '0.06em' }} aria-hidden="true">· · ·</span> Mundo</span></div></div><ResponsiveContainer width="100%" height={300}><LineChart accessibilityLayer data={evolution} margin={{ top: 18, right: 155, left: 8, bottom: 8 }}><CartesianGrid stroke="var(--border)" /><XAxis dataKey="year" /><YAxis domain={yDomain} /><Tooltip content={<SpanishTooltip labelPrefix="Año " nameMap={evolutionNameMap} />} isAnimationActive={false} />{evolutionLines.map((line) => <Line key={line.dataKey} dataKey={line.dataKey} stroke={line.color} strokeWidth={line.strokeWidth} strokeDasharray={line.strokeDasharray} dot={false} isAnimationActive={false} />)}<Customized component={EndLabels} /></LineChart></ResponsiveContainer></section>
       <section className="panel" aria-label={`Percentiles de ${countryEs(current.country)} por dimensión para ${year}`}><div className="panel-heading"><h2>Dimensiones destacadas (percentil)</h2></div><ResponsiveContainer width="100%" height={300}><BarChart accessibilityLayer data={dimensionRows} layout="vertical" margin={{ top: 22, left: 12, right: 34 }}><CartesianGrid stroke="var(--border)" /><XAxis type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} /><YAxis type="category" dataKey="name" width={170} interval={0} tick={{ fontSize: 12 }} /><Tooltip content={<SpanishTooltip nameMap={{ percentile: `Percentil de ${countryEs(current.country)}` }} />} isAnimationActive={false} /><ReferenceLine x={50} stroke="var(--text-2)" strokeDasharray="5 4" label={{ value: 'Mediana mundial', position: 'top', fill: 'var(--text-2)', fontSize: 12 }} /><Bar dataKey="percentile" name={`Percentil de ${countryEs(current.country)}`} isAnimationActive={false}><LabelList dataKey="percentile" position="right" formatter={(value) => Number.isFinite(value) ? fmtNum(value, 0) : 'N/D'} />{dimensionRows.map((row) => <Cell key={row.name} fill={!Number.isFinite(row.percentile) ? 'var(--nodata)' : row.percentile >= 50 ? '#D97706' : '#2563EB'} />)}</Bar></BarChart></ResponsiveContainer></section>
-      <section className="panel" aria-label={`Ranking regional de ${countryEs(current.country)} en ${year}`}><div className="panel-heading"><h2>Su lugar en la región ({year})</h2></div><ResponsiveContainer width="100%" height={300}><BarChart accessibilityLayer data={regionalContext} layout="vertical" margin={{ left: 8, right: 36 }}><CartesianGrid stroke="var(--border)" /><XAxis type="number" domain={[0, 8]} /><YAxis type="category" dataKey="country" width={168} interval={0} tick={{ fontSize: 12 }} tickFormatter={(_, index) => { const row = regionalContext[index]; return row ? `${row.rank}. ${row.country}` : '' }} /><Tooltip content={<SpanishTooltip nameMap={{ score: 'Puntaje' }} />} isAnimationActive={false} /><Bar dataKey="score" name="Puntaje" isAnimationActive={false}>{regionalContext.map((row) => <Cell key={row.countryKey} fill={row.countryKey === countryKey ? '#2563EB' : '#FDE68A'} />)}<LabelList dataKey="score" position="right" formatter={(value) => fmtNum(value)} /></Bar></BarChart></ResponsiveContainer></section>
+      <section className="panel" aria-label={`Ranking regional de ${countryEs(current.country)} en ${year}`}><div className="panel-heading"><h2>Su lugar en la región ({year})</h2></div><ResponsiveContainer width="100%" height={312}><BarChart accessibilityLayer data={regionalContext} layout="vertical" margin={{ top: 8, left: 8, right: 36, bottom: 18 }}><CartesianGrid stroke="var(--border)" /><XAxis type="number" domain={[0, 8]} /><YAxis type="category" dataKey="country" width={168} interval={0} tick={{ fontSize: 12 }} tickFormatter={(_, index) => { const row = regionalContext[index]; return row ? `${row.rank}. ${row.country}` : '' }} /><Tooltip content={<SpanishTooltip nameMap={{ score: 'Puntaje' }} />} isAnimationActive={false} /><Bar dataKey="score" name="Puntaje" isAnimationActive={false}>{regionalContext.map((row) => <Cell key={row.countryKey} fill={row.countryKey === countryKey ? '#2563EB' : '#FDE68A'} />)}<LabelList dataKey="score" position="right" formatter={(value) => fmtNum(value)} /></Bar></BarChart></ResponsiveContainer></section>
       <section className="panel"><div className="panel-heading"><h2>Puntaje y lugar por año</h2></div><div className="table-scroll"><table><thead><tr><th>Año</th><th>Puntaje</th><th>Lugar</th><th>Países con datos</th></tr></thead><tbody>{yearlySummary.map((row) => <tr key={row.year} className={row.year === year ? 'selected-year-row' : ''}><td>{row.year}</td><td>{row.score === null ? 'N/D' : fmtNum(row.score)}</td><td>{row.rank === null ? 'N/D' : fmtInt(row.rank)}</td><td>{fmtInt(row.total)}</td></tr>)}</tbody></table></div></section>
     </div>
   </>
