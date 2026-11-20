@@ -102,6 +102,7 @@ export default function Factors({ data, year, region, countryKey, onOpenDataNote
   const showComparabilityNotice = dimension === 'hle' || dimension === 'social'
   const highlightedWeight = weightsData.find((item) => item.key === dimension)
   const sortedWeights = [...weightsData].sort((a, b) => b.weight - a.weight)
+  const selectedDimensionName = dimensions[dimension]
 
   return <>
     <div className="dimension-tabs">
@@ -111,7 +112,7 @@ export default function Factors({ data, year, region, countryKey, onOpenDataNote
     </div>
     <div className="dashboard-grid factors-grid">
       <section className="panel factor-map-panel" aria-label={`Mapa de ${dimensions[dimension]} para ${year}`}>
-        <div className="panel-heading"><div><h2>Mapa: {dimensions[dimension]} ({year})</h2><p>{gdpNotComparable ? 'N/D para esta edición del PIB' : 'Escala fija para todos los años'}</p></div></div>
+        <div className="panel-heading"><div><h2>Mapa: {selectedDimensionName} ({year})</h2><p>{gdpNotComparable ? 'N/D para esta edición del PIB' : 'Escala fija para todos los años'}</p></div></div>
         <MapChart
           records={records}
           year={year}
@@ -126,7 +127,7 @@ export default function Factors({ data, year, region, countryKey, onOpenDataNote
         {gdpNotComparable && <p className="comparability-note">PIB 2016 no confiable en la fuente: el mapa se muestra como N/D.</p>}
       </section>
       <section className="panel scatter-panel" aria-label={`Dispersión entre ${dimensions[dimension]} y puntaje de felicidad para ${year}. Correlación ${correlationLabel}`}>
-        <div className="panel-heading"><div><h2>{dimensions[dimension]} vs felicidad</h2><p>{year}</p></div><span className="r-chip">r = {correlationLabel}</span></div>
+        <div className="panel-heading"><div><h2>{selectedDimensionName} vs felicidad</h2><p>{year}</p></div><span className="r-chip">r = {correlationLabel}</span></div>
         {showComparabilityNotice && <p className="comparability-note">Los niveles de esta variable cambian entre ediciones: compara países dentro del mismo año.</p>}
         {gdpNotComparable ? <div className="not-comparable"><strong>N/D</strong><p>Sin datos de PIB para 2016. Elige otro año u otra dimensión.</p><button type="button" onClick={onOpenDataNotes}>Ver notas</button></div> : <ResponsiveContainer width="100%" height={330}>
           <ScatterChart accessibilityLayer margin={{ top: 10, right: 18, bottom: 15, left: 10 }}>

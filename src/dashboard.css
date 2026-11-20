@@ -105,6 +105,7 @@ td { color:var(--text); }
 .country-selector select { height:38px; min-width:220px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text); padding:0 8px; }
 .country-selector select option { color:var(--text); background:var(--card); }
 .country-selector-compare { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; }
+.panel-country-controls { margin: 4px 0 8px; }
 .country-compare-tags { display:flex; flex-wrap:wrap; gap:8px; }
 .country-compare-tag { height:30px; border:1px solid var(--border); border-radius:999px; background:var(--card); color:var(--text); display:inline-flex; align-items:center; gap:6px; padding:0 10px; font-size:12px; }
 .country-compare-tag .dot { width:8px; height:8px; border-radius:999px; display:inline-block; }
