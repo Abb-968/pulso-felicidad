@@ -1,0 +1,695 @@
+UNIVERSIDAD DEL CARIBE · VISUALIZACIÓN DE DATOS 
+El pulso de la felicidad mundial 
+Fase 2: Diseño del Dashboard 
+Justificación de KPIs, visualizaciones, paleta, accesibilidad, arquitectura de vistas y wireframes 
+ 
+ 
+Equipo Proyecto 1 
+Integrantes 
+Abigail Hernandez Contreras 
+Jorge Enrique Soberanes Espinosa 
+Diego Ángel Vázquez Contreras 
+Materia Visualización de Datos 
+Docente Jessica Carmín Mendiola Fuentes 
+Institución Universidad del Caribe 
+Fecha 13 de noviembre de 2026 
+Tema Bienestar y desarrollo humano 
+Dataset World Happiness Report (2015–2024) 
+Enlace al dataset 
+(Kaggle) https://www.kaggle.com/datasets/yadiraespinoza/world-happiness-2015-2024 
+Repositorio (GitHub) https://github.com/Abb-968/pulso-felicidad 
+Prototipo (Figma) https://www.figma.com/design/5NYMm1rg8w5NMPPhFDwA35/wireframe_baja_fidelidad?n ode-id=0-1&t=SpvozdMFPId6RJAj-1 
+ 
+El pulso de la felicidad mundial — Fase 2 Proyecto 1 
+Universidad del Caribe · Visualización de Datos · 13 de noviembre de 2026 Página 2 de 23 
+Índice 
+1. Resumen Ejecutivo de Diseño .................................................................................................................................................... 4 
+1.1 Catálogo de indicadores de referencia (Fase 1) ......................................................................................................... 4 
+1.2 Trazabilidad entre criterios de evaluación y secciones .......................................................................................... 5 
+2. Selección y Justificación de KPIs ............................................................................................................................................... 6 
+2.1 KPI principal: puntaje promedio global de felicidad ................................................................................................ 6 
+2.2 KPIs secundarios ...................................................................................................................................................................... 6 
+S1. Mediana global e IQR ......................................................................................................................................................... 6 
+S2. Brecha Top 10 vs Bottom 10 .......................................................................................................................................... 6 
+S3. Proporción de países que mejoraron frente a 2015 ............................................................................................ 6 
+S4. Correlación PIB per cápita – felicidad ........................................................................................................................ 6 
+2.3 Tabla de KPIs ............................................................................................................................................................................. 7 
+2.4 Consideraciones de calidad de datos .............................................................................................................................. 7 
+3. Selección y Justificación de Visualizaciones ........................................................................................................................ 8 
+3.1 Tabla de selección de visualizaciones ............................................................................................................................. 8 
+3.2 Vistas secundarias ................................................................................................................................................................... 8 
+4. Paleta de Colores, Tipografía y Accesibilidad ................................................................................................................... 10 
+4.1 Colores principales y contraste WCAG ......................................................................................................................... 10 
+4.2 Escala coroplética secuencial de 6 clases .................................................................................................................... 11 
+4.3 Tipografía .................................................................................................................................................................................. 11 
+4.4 Principios de accesibilidad aplicados ........................................................................................................................... 12 
+5. Arquitectura de Vistas, Wireframes y Jerarquía Visual ................................................................................................ 13 
+5.1 Cuadrícula base de 12 columnas ..................................................................................................................................... 13 
+5.2 Niveles de jerarquía visual ................................................................................................................................................ 13 
+5.3 Fundamentos de diseño: Patrón Z, Gestalt y flujo Push → Pull .......................................................................... 14 
+Patrón Z (Diagrama de Gutenberg) .................................................................................................................................. 14 
+Principios Gestalt ..................................................................................................................................................................... 14 
+Flujo progresivo Push → Pull .............................................................................................................................................. 14 
+5.4 Inventario de vistas .............................................................................................................................................................. 14 
+5.5 Descripción de las vistas y wireframes ........................................................................................................................ 15 
+5.5.1 Vista 01: Panorama ...................................................................................................................................................... 15 
+5.5.2 Vista 02: Explorar factores ........................................................................................................................................ 16 
+5.5.3 Vista 03: Mi país ............................................................................................................................................................. 17 
+5.5.4 Vista 04: Datos y notas ................................................................................................................................................ 19 
+5.5.5 Vista 05: Estados especiales ..................................................................................................................................... 20 
+6. Especificaciones para la Fase 3 (Implementación en React) y Conclusiones ...................................................... 22 
+El pulso de la felicidad mundial — Fase 2 Proyecto 1 
+Universidad del Caribe · Visualización de Datos · 13 de noviembre de 2026 Página 3 de 23 
+6.1 Reglas de interacción ........................................................................................................................................................... 22 
+6.2 Catálogo ISO para nombres de países en español ................................................................................................... 22 
+6.3 Stack técnico ............................................................................................................................................................................ 23 
+6.4 Criterios de aceptación para la Fase 3 .......................................................................................................................... 23 
+6.5 Conclusiones ............................................................................................................................................................................ 23 
+ 
+ 
+Tabla 1. Estructura general del documento. 
+Sección Contenido Criterio (pts) 
+1 Resumen ejecutivo de diseño y trazabilidad de criterios Criterio 5 (10) 
+2 Selección y justificación de KPIs Criterio 1 (20) 
+3 Selección y justificación de visualizaciones Criterio 2 (20) 
+4 Paleta de colores, tipografía y accesibilidad Criterio 3 (20) 
+5 Arquitectura de vistas, wireframes y jerarquía visual Criterio 4 (30) 
+6 Especificaciones para la Fase 3 (React) y conclusiones Criterio 5 (10) 
+ 
+ 
+El pulso de la felicidad mundial — Fase 2 Proyecto 1 
+Universidad del Caribe · Visualización de Datos · 13 de noviembre de 2026 Página 4 de 23 
+1. Resumen Ejecutivo de Diseño 
+El Proyecto 1, «El pulso de la felicidad mundial», diseña un dashboard interactivo que responde una 
+pregunta central: ¿cómo ha evolucionado el bienestar subjetivo en el mundo entre 2015 y 2024 y 
+qué factores del desarrollo humano se asocian con las diferencias entre países? La Fase 1 consolidó 
+el dataset World Happiness Report (2015–2024) en 1,502 observaciones país-año correspondientes a 165 
+países unificados. La Fase 2 traduce ese análisis en decisiones de diseño verificables: qué indicadores 
+mostrar, con qué gráfico, con qué color y en qué lugar de la pantalla. 
+El diseño se organiza en cinco vistas (Panorama, Explorar factores, Mi país, Datos y notas, y Estados 
+especiales) sobre una cuadrícula de 12 columnas en un marco de 1440 × 900 px. La narrativa sigue el flujo 
+Push → Pull: el usuario recibe primero la respuesta global (Push) y después decide explorar factores, 
+comparar regiones o consultar su país (Pull). 
+Tabla 2. Resumen de decisiones de diseño de la Fase 2. 
+Elemento Decisión de diseño Valor de referencia 
+KPI principal Puntaje promedio global de felicidad 5.53 en 2024 (+0.15 vs 2015) 
+KPIs secundarios Mediana e IQR; brecha Top 10 vs Bottom 10; proporción de países que mejoraron; correlación PIB–felicidad 5.80 (+0.57); 4.21 puntos; 59% (82 de 138); r = 0.77 
+Visualizaciones Tarjetas KPI, mapa coroplético, líneas (≤ 5 series), barras ordenadas desde cero, barra apilada al 100%, dispersión Sin gráficos de pastel 
+Paleta «Sol y Horizonte» con escala coroplética de 6 clases Rango fijo 1.7–7.8; «Sin datos» #CBD5E1 
+Tipografía Inter con escala jerárquica 48 / 32 / 24 / 18 / 14 / 12 px 
+Arquitectura Cuadrícula de 12 columnas y 3 niveles de jerarquía 1440 × 900 px; margen 24 px; separación 16 px 
+Datos Cobertura y exclusiones de la Fase 1 1,502 obs.; 165 países; PIB 2016 excluido 
+ 
+1.1 Catálogo de indicadores de referencia (Fase 1) 
+Los KPIs de este documento se enlazan con los identificadores I1–I10 definidos en la Fase 1. La Tabla 3 
+resume el catálogo utilizado como referencia. 
+Tabla 3. Catálogo de indicadores I1–I10 usado en los enlaces de KPI. 
+ID Indicador / columna 
+I1 Puntaje de felicidad (score) 
+I2 PIB per cápita (2016 = N/D) 
+I3 Apoyo social 
+I4 Esperanza de vida saludable 
+I5 Libertad para tomar decisiones 
+I6 Generosidad 
+I7 Percepción de corrupción (armonizada 2015, 2020, 2021 y 2023) 
+I8 País (catálogo unificado, 165 países) 
+I9 Año (2015–2024) 
+El pulso de la felicidad mundial — Fase 2 Proyecto 1 
+Universidad del Caribe · Visualización de Datos · 13 de noviembre de 2026 Página 5 de 23 
+ID Indicador / columna 
+I10 Región 
+ 
+Coherencia con la Fase 1 
+Todas las cifras de este documento respetan las reglas de la Fase 1: 1,502 observaciones país-año (2015–2024), 
+165 países unificados, exclusión del PIB de 2016 por corrupción de datos (se muestra como «N/D») y corrupción 
+percibida armonizada en 2015, 2020, 2021 y 2023. Los valores decimales usan punto como separador (por 
+ejemplo, 5.53). 
+ 
+1.2 Trazabilidad entre criterios de evaluación y secciones 
+Tabla 4. Matriz de trazabilidad de la rúbrica de la Fase 2 (100 puntos). 
+Criterio de evaluación (Fase 2) Pts Sección Evidencia en el documento 
+1. Selección y justificación de KPIs 20 2 KPI principal, 4 KPIs secundarios y tabla con rol, fórmula, valor 2024 y justificación 
+2. Selección y justificación de 
+visualizaciones 20 3 Tabla KPI → gráfico → justificación; reglas de clase; vistas secundarias 
+3. Paleta, tipografía y accesibilidad 20 4 Paleta «Sol y Horizonte», contrastes WCAG calculados, escala coroplética, Figura 1 
+4. Arquitectura de vistas, wireframes y 
+jerarquía visual 30 5 Cuadrícula de 12 columnas, 3 niveles, Patrón Z, Gestalt, Push → Pull y 10 wireframes 
+5. Documentación técnica y 
+especificaciones para la Fase 3 10 1 y 6 Metadatos oficiales, coherencia con Fase 1, reglas de interacción, ISO y stack técnico 
+Total 100 — Cobertura completa de la rúbrica 
+ 
+ 
+El pulso de la felicidad mundial — Fase 2 Proyecto 1 
+Universidad del Caribe · Visualización de Datos · 13 de noviembre de 2026 Página 6 de 23 
+2. Selección y Justificación de KPIs 
+Un dashboard eficaz limita el número de indicadores clave para que cada uno tenga una función analítica 
+distinta. Se seleccionaron cinco KPIs (uno principal y cuatro secundarios) con cuatro criterios: relevancia 
+respecto de la pregunta central, comparabilidad entre años, calculabilidad a partir de las columnas de 
+la Fase 1 y complementariedad (cada KPI responde algo que los demás no responden). 
+2.1 KPI principal: puntaje promedio global de felicidad 
+Definición. Media aritmética del puntaje de felicidad (I1) de los países con dato en el año seleccionado. 
+Valor de referencia: 5.53 en 2024, equivalente a +0.15 puntos frente a 2015 (≈ 5.38). 
+Por qué responde la pregunta central. La pregunta central pide describir la evolución del bienestar 
+mundial. Un único número por año, con su variación respecto del año base, permite al usuario formarse 
+una idea inmediata de la dirección del cambio: el bienestar medio mundial aumentó ligeramente en una 
+década. 
+Por qué se complementa con la mediana. La media es sensible a valores extremos y a la composición de 
+países que cambia entre años. La mediana (S1) es robusta frente a ambos efectos. En 2024 la media (5.53) 
+queda por debajo de la mediana (5.80), lo que indica una asimetría negativa: una cola inferior de países 
+con puntajes bajos arrastra el promedio. En 2015 ocurría lo contrario (mediana implícita ≈ 5.23 frente a 
+media ≈ 5.38). Mostrar ambas evita una lectura engañosa de un solo estadístico. 
+2.2 KPIs secundarios 
+S1. Mediana global e IQR 
+Mediana del puntaje (I1) por año: 5.80 en 2024 (+0.57 frente a 2015). El rango intercuartil (IQR = Q3 − 
+Q1) cuantifica la dispersión del 50% central de los países. Su incremento o reducción indica si el mundo 
+se vuelve más homogéneo o más desigual en bienestar, información que la media no ofrece. 
+S2. Brecha Top 10 vs Bottom 10 
+Diferencia entre el promedio de los 10 países con mayor puntaje y el de los 10 con menor puntaje en el 
+año seleccionado: 4.21 puntos en 2024. Resume la desigualdad entre extremos de forma comprensible y 
+enlaza directamente con los rankings Top/Bottom 10 del nivel 3 de la jerarquía visual. 
+S3. Proporción de países que mejoraron frente a 2015 
+Proporción de países con puntaje 2024 mayor al de 2015, sobre los países con dato en ambos años: 59% 
+(82 de 138). El denominador es 138 y no 165 porque no todos los países unificados tienen observación 
+en los dos años. Este KPI responde si el avance es generalizado o concentrado: un promedio estable puede 
+ocultar mejoras y retrocesos que se compensan. 
+S4. Correlación PIB per cápita – felicidad 
+Coeficiente de correlación de Pearson entre I2 (PIB per cápita) e I1 (puntaje): r = 0.77 en 2024 y r = 0.776 
+en el conjunto global sin 2016. Cuantifica la asociación entre desarrollo económico y bienestar y justifica 
+la vista de dispersión. Se declara que es una asociación y no una relación causal. 
+El pulso de la felicidad mundial — Fase 2 Proyecto 1 
+Universidad del Caribe · Visualización de Datos · 13 de noviembre de 2026 Página 7 de 23 
+2.3 Tabla de KPIs 
+Tabla 5. KPIs seleccionados con fórmula, valor de referencia y justificación analítica. 
+Rol KPI Fórmula / Columnas (Fase 1) Valor de referencia 2024 Justificación analítica 
+Principal Puntaje promedio global de felicidad media(I1) por año, agrupando por I9 sobre países (I8) con dato 5.53 (+0.15 vs 2015) Responde la pregunta central con una cifra comparable año a año; se contrasta con la mediana para detectar asimetría. 
+Secundario 
+S1 Mediana global e IQR mediana(I1); IQR = Q3(I1) − Q1(I1) por I9 
+5.80 
+(+0.57 vs 2015) 
+IQR = Q3 − Q1 
+Estadístico robusto a extremos y a 
+cambios de composición; el IQR mide la 
+dispersión del 50% central. 
+Secundario 
+S2 
+Brecha Top 10 vs 
+Bottom 10 
+media(I1 de los 10 mayores) − 
+media(I1 de los 10 menores), 
+por I9 e I8 
+4.21 puntos Resume la desigualdad entre extremos y conecta con los rankings del nivel 3. 
+Secundario 
+S3 
+Proporción de países 
+que mejoraron vs 
+2015 
+#{I8: I1(2024) > I1(2015)} / 
+#{I8 con I1 en 2015 y 2024} 
+59% 
+(82 de 138) 
+Indica si el avance es generalizado; 
+evita que el promedio oculte 
+compensaciones. 
+Secundario 
+S4 
+Correlación PIB per 
+cápita – felicidad 
+r de Pearson entre I2 e I1 
+(2016 excluido por I2 = N/D) 
+r = 0.77 
+(0.776 global sin 
+2016) 
+Cuantifica la asociación entre 
+desarrollo económico y bienestar; 
+sustenta la dispersión. 
+ 
+2.4 Consideraciones de calidad de datos 
+• PIB de 2016: excluido por corrupción de datos; S4 no se calcula para 2016 y la interfaz muestra 
+«N/D» (vista de estados especiales). 
+• Corrupción percibida (I7): armonizada en 2015, 2020, 2021 y 2023; los análisis que la usan 
+indican esta condición en la nota metodológica. 
+• Cobertura variable: no todos los países tienen dato cada año; S3 usa únicamente los 138 países con 
+dato en 2015 y 2024, y el mapa representa los faltantes como «Sin datos». 
+• Discontinuidad en 2018: la serie presenta saltos de escala que se anotan en el gráfico de evolución 
+para evitar interpretaciones erróneas. 
+Criterio de lectura 
+Las variaciones se expresan en puntos absolutos de la escala de felicidad (por ejemplo, +0.15) y las proporciones 
+en porcentaje con el recuento entre paréntesis (59%, 82 de 138), de modo que el usuario siempre conozca el 
+tamaño de la base. 
+ 
+ 
+El pulso de la felicidad mundial — Fase 2 Proyecto 1 
+Universidad del Caribe · Visualización de Datos · 13 de noviembre de 2026 Página 8 de 23 
+3. Selección y Justificación de Visualizaciones 
+La elección de cada gráfico depende de la tarea analítica (comparar, ordenar, ver tendencia, mostrar 
+proporciones o relación entre variables) y se rige por las reglas de la clase: 
+• Barras desde cero y ordenadas: la longitud codifica el valor, por lo que el eje parte de 0 y las 
+categorías se ordenan de mayor a menor. 
+• Máximo 5 series por gráfico de líneas: más series generan «espagueti» y deterioran la legibilidad. 
+• Evitar el gráfico de pastel: las proporciones se muestran con barra apilada al 100%, donde los 
+segmentos comparten una línea base común. 
+• Gráfico de dispersión para relaciones entre dos variables cuantitativas. 
+• Mapa coroplético para distribución geográfica con escala secuencial de un solo matiz. 
+• Tarjetas KPI para cifras clave con variación respecto del año base. 
+3.1 Tabla de selección de visualizaciones 
+Tabla 6. Selección de visualizaciones por KPI o indicador. 
+KPI / Indicador Tipo de gráfico Justificación metodológica 
+Principal: puntaje promedio 
+global 
+Tarjeta KPI con variación (+0.15) y 
+minigráfico de tendencia 
+Cifra grande y única en el nivel 1 para lectura inmediata; la 
+variación frente a 2015 da contexto sin añadir ejes. 
+Evolución del promedio y la 
+mediana (2015–2024) 
+Gráfico de líneas (máx. 5 series: 
+promedio, mediana y hasta 3 
+países o regiones) 
+La continuidad visual comunica tendencia; el límite de 5 series 
+evita saturación; marca vertical en 2018 por el salto de escala. 
+Distribución geográfica del 
+puntaje 
+Mapa coroplético de 6 clases, rango 
+fijo 1.7–7.8 
+Permite comparar territorios; el rango fijo asegura 
+comparabilidad entre años; gris #CBD5E1 para «Sin datos». 
+S1: mediana e IQR Tarjeta KPI con valor de mediana e IQR en texto secundario Dos cifras complementarias en un mismo bloque; la distribución completa se detalla en la vista de percentiles. 
+S2: brecha Top 10 vs 
+Bottom 10 
+Tarjeta KPI + dos barras 
+horizontales ordenadas desde cero 
+(Top 10 y Bottom 10) 
+Las barras con base en cero permiten comparar magnitudes; el 
+orden facilita leer posiciones. 
+S3: proporción de países 
+que mejoraron 
+Barra apilada al 100% (mejoraron 
+82; no mejoraron 56) 
+Sustituye al pastel: segmentos con base común comparables 
+con precisión. «No mejoraron» incluye países que empeoraron 
+o se mantuvieron. 
+S4: correlación PIB – 
+felicidad 
+Gráfico de dispersión con línea de 
+tendencia y valor de r 
+Es el gráfico indicado para relaciones bivariadas; el color 
+destaca el país seleccionado y 2016 queda marcado como N/D. 
+Ranking de países 
+(Top/Bottom 10) 
+Barras horizontales ordenadas, 
+base en 0 
+Ordenar facilita identificar posiciones; el valor numérico se 
+rotula al extremo de la barra. 
+Comparación regional (I10) Barras verticales por región con línea de promedio global La línea de referencia permite ver qué regiones quedan sobre o bajo el promedio mundial. 
+ 
+3.2 Vistas secundarias 
+Tabla 7. Justificación de vistas secundarias. 
+Vista secundaria Tipo de gráfico Justificación 
+Barras por región con línea de 
+promedio global 
+Barras + línea de referencia 
+horizontal 
+Compara categorías (regiones) contra un valor 
+común, el promedio mundial. 
+Dispersión por dimensión (I2–
+I7 vs I1) 
+Dispersión con selector de 
+dimensión 
+Un mismo patrón visual con selector reduce la carga 
+cognitiva y permite comparar la fuerza de asociación 
+de cada factor. 
+El pulso de la felicidad mundial — Fase 2 Proyecto 1 
+Universidad del Caribe · Visualización de Datos · 13 de noviembre de 2026 Página 9 de 23 
+Vista secundaria Tipo de gráfico Justificación 
+Percentiles Marcadores p10, p25, p50, p75, p90 por año Muestra la distribución y el IQR sin asumir normalidad; amplía S1. 
+Tabla de detalle Tabla ordenable y filtrable por país, año y región Da acceso al dato exacto y apoya la verificación, lo cual refuerza la transparencia. 
+ 
+Decisión: ¿por qué no usar pastel? 
+En un gráfico de pastel el ángulo y el área son difíciles de comparar con precisión. Una barra apilada al 100% (82 
+países que mejoraron frente a 56 que no) conserva la lectura de «parte del todo» y permite comparar longitudes 
+sobre una línea base común. 
+ 
+ 
+El pulso de la felicidad mundial — Fase 2 Proyecto 1 
+Universidad del Caribe · Visualización de Datos · 13 de noviembre de 2026 Página 10 de 23 
+4. Paleta de Colores, Tipografía y Accesibilidad 
+La paleta «Sol y Horizonte» evoca la luz cálida del amanecer (ámbar y amarillo) frente a la profundidad del 
+horizonte (cobalto y pizarra). Se refinó para garantizar contraste suficiente, legibilidad con daltonismo y 
+una jerarquía cromática clara: el ámbar y el amarillo expresan el fenómeno medido (felicidad), el cobalto 
+marca interacción y comparación, y las pizarras estructuran texto y contenedores. 
+ 
+Figura 1. Paleta «Sol y Horizonte»: colores principales y escala coroplética de 6 clases (rango fijo 1.7–7.8) con la clase «Sin 
+datos». 
+4.1 Colores principales y contraste WCAG 
+Tabla 8. Paleta principal con ratios de contraste WCAG 2.1 calculados en este script. 
+Código Hex Nombre Rol semántico Ratio de contraste WCAG Justificación de accesibilidad 
+#D97706 Ámbar intenso 
+Acento principal, 
+tendencia y elementos 
+destacados 
+3.08:1 (sobre fondo cálido) 
+AA solo texto grande y 
+componentes gráficos 
+Evoca calidez y bienestar; con ratio 
+cercano a 3:1 se reserva para formas, 
+líneas, íconos y texto grande, nunca para 
+texto pequeño. 
+#FBBF24 Amarillo solar Acento secundario sobre superficies oscuras 8.76:1 (sobre pizarra oscuro) AAA (texto normal) Máxima luminosidad de la paleta; se emplea sobre #1E293B (encabezados, motivo de pulso) donde alcanza contraste muy alto. 
+#2563EB Azul cobalto 
+Interacción, selección y 
+comparación (país 
+elegido) 
+5.00:1 (sobre fondo cálido) 
+AA (texto normal) 
+Contrasta en matiz y luminosidad con la 
+familia ámbar; es seguro para 
+daltonismo y evita pares rojo–verde. 
+#1E293B Pizarra oscuro Texto principal, títulos y encabezados de tabla 14.16:1 (sobre fondo cálido) AAA (texto normal) Texto de alta legibilidad en cualquier tamaño; evita el negro puro que genera brillo excesivo. 
+#475569 Gris pizarra secundario Texto secundario, ejes, etiquetas y rejillas 7.34:1 (sobre fondo cálido) AAA (texto normal) Jerarquía tipográfica sin perder legibilidad; cumple contraste de texto normal. 
+#FFFBF2 Fondo cálido Lienzo general y filas alternas 14.16:1 (texto pizarra sobre este fondo) AAA (texto normal) Reduce el cansancio visual frente al blanco puro y mantiene la calidez de la identidad. 
+
+El pulso de la felicidad mundial — Fase 2 Proyecto 1 
+Universidad del Caribe · Visualización de Datos · 13 de noviembre de 2026 Página 11 de 23 
+Código Hex Nombre Rol semántico Ratio de contraste WCAG Justificación de accesibilidad 
+#CBD5E1 Gris «Sin datos» Países o años sin observación 
+9.85:1 (texto #1E293B sobre 
+gris); contra fondo 1.44:1 
+Texto: AAA (texto normal); 
+relleno acompañado de 
+borde #475569 y etiqueta 
+Gris neutro distinto de toda la escala 
+ámbar; no se interpreta como valor 
+bajo. Se complementa con borde y 
+etiqueta textual. 
+ 
+Criterio de uso del ámbar 
+El ámbar #D97706 alcanza 3.08:1 sobre el fondo cálido, suficiente para componentes gráficos y texto grande 
+(WCAG 1.4.11 y 1.4.3 para texto de 18 pt o más), pero no para texto pequeño. Por ello, el texto informativo usa 
+pizarra (#1E293B, 14.16:1) o gris pizarra (#475569, 7.34:1). 
+ 
+4.2 Escala coroplética secuencial de 6 clases 
+Tabla 9. Escala coroplética con rango fijo 1.7–7.8 (clases de igual amplitud). 
+Clase Código Hex Rango de puntaje Luminancia relativa 
+Clase 1 #FEF3C7 1.70 – 2.72 0.893 
+Clase 2 #FDE68A 2.72 – 3.73 0.793 
+Clase 3 #FCD34D 3.73 – 4.75 0.678 
+Clase 4 #F59E0B 4.75 – 5.77 0.439 
+Clase 5 #D97706 5.77 – 6.78 0.280 
+Clase 6 #B45309 6.78 – 7.80 0.159 
+Sin datos #CBD5E1 Sin observación 0.657 
+ 
+• Rango fijo 1.7–7.8: el mismo color representa siempre el mismo puntaje, sin importar el año 
+seleccionado, lo que permite comparar mapas de distintos años y evita que la animación temporal 
+reescale los colores. 
+• Un solo matiz (amarillo a ámbar oscuro): la luminancia desciende de forma monótona (más 
+oscuro = mayor puntaje), de modo que la escala se lee también en escala de grises. 
+• Sin rojo–verde: no se emplean combinaciones rojo–verde ni escalas divergentes que dependan de 
+esa distinción, por lo que la paleta es legible con deuteranopía, protanopía y tritanopía. 
+• Color nunca como único canal: las clases se acompañan de leyenda con rangos numéricos y 
+tooltips con el valor exacto. 
+4.3 Tipografía 
+Se utiliza Inter, una sans-serif diseñada para pantallas, con cifras tabulares y excelente legibilidad en 
+tamaños pequeños. Se emplean tres pesos (Regular 400, SemiBold 600 y Bold 700) para mantener una 
+jerarquía clara sin recargar. En el documento Word, la fuente se declara como Inter; si no está instalada, el 
+procesador de texto usa una alternativa sans-serif. 
+Tabla 10. Escala tipográfica del dashboard (Inter). 
+Nivel Uso Tamaño Peso Color 
+Cifra KPI principal Valor 5.53 en el nivel 1 48 px Bold 700 #1E293B 
+Título H1 Título del dashboard 32 px Bold 700 #1E293B 
+El pulso de la felicidad mundial — Fase 2 Proyecto 1 
+Universidad del Caribe · Visualización de Datos · 13 de noviembre de 2026 Página 12 de 23 
+Nivel Uso Tamaño Peso Color 
+Título H2 Título de sección o tarjeta 24 px SemiBold 600 #1E293B 
+Subtítulo H3 Títulos de gráficos 18 px SemiBold 600 #475569 
+Cuerpo Texto, tooltips y tablas 14 px Regular 400 #1E293B 
+Etiqueta / nota Ejes, leyendas y pies de nota 12 px Regular 400 #475569 
+ 
+Ningún texto del dashboard es menor de 12 px. La relación entre niveles sigue una escala aproximada de 
+1.33, que produce saltos perceptibles entre jerarquías. 
+4.4 Principios de accesibilidad aplicados 
+• Contraste de texto informativo igual o superior a 4.5:1 (pizarra y gris pizarra sobre fondo cálido). 
+• Doble codificación: color + etiqueta numérica, posición o forma en todos los gráficos. 
+• Estados de foco visibles con contorno cobalto de 2 px en controles interactivos. 
+• Tooltips y tablas de detalle como alternativa textual a la información del mapa y de los gráficos. 
+• Texto alternativo (aria-label) para tarjetas KPI y gráficos en la implementación de la Fase 3. 
+ 
+El pulso de la felicidad mundial — Fase 2 Proyecto 1 
+Universidad del Caribe · Visualización de Datos · 13 de noviembre de 2026 Página 13 de 23 
+5. Arquitectura de Vistas, Wireframes y Jerarquía 
+Visual 
+5.1 Cuadrícula base de 12 columnas 
+El diseño parte de un marco de 1440 × 900 px con 12 columnas, margen de 24 px y separación (gutter) 
+de 16 px. El ancho de cada columna es de 101.33 px ((1440 − 2 × 24 − 11 × 16) / 12). La cuadrícula 
+garantiza alineación, ritmo visual y proporciones consistentes entre las cinco vistas, y se traduce 
+directamente a CSS Grid en la Fase 3. 
+Tabla 11. Parámetros de la cuadrícula base. 
+Parámetro Valor 
+Marco de diseño 1440 × 900 px 
+Columnas 12 
+Margen exterior 24 px 
+Separación entre columnas (gutter) 16 px 
+Ancho de columna 101.33 px 
+Área útil 1392 × 852 px 
+ 
+5.2 Niveles de jerarquía visual 
+Tabla 12. Asignación de componentes a la cuadrícula en la vista Panorama (marco 1440 × 900 px). 
+Nivel Componente (vista Panorama) Columnas x (px) Ancho (px) y (px) Alto (px) 
+Nivel 1 Encabezado con motivo de pulso, título y selector de año 1–8 24 923 24 120 
+Nivel 1 KPI principal: puntaje promedio global (5.53) 9–12 963 453 24 120 
+Nivel 2 KPI secundario S1 (mediana e IQR) 1–3 24 336 160 104 
+Nivel 2 KPI secundario S2 (brecha Top/Bottom 10) 4–6 376 336 160 104 
+Nivel 2 KPI secundario S3 (países que mejoraron) 7–9 728 336 160 104 
+Nivel 2 KPI secundario S4 (correlación PIB–felicidad) 10–12 1080 336 160 104 
+Nivel 2 Mapa coroplético 1–7 24 805 280 320 
+Nivel 2 Serie de evolución (líneas) 8–12 845 571 280 320 
+Nivel 3 Rankings Top 10 / Bottom 10 1–4 24 453 616 216 
+Nivel 3 Comparación regional 5–8 493 453 616 216 
+Nivel 3 Dispersión PIB–felicidad 9–12 963 453 616 216 
+Nivel 3 Notas y fuente 1–12 24 1392 848 28 
+ 
+• Nivel 1 (mensaje principal): encabezado con motivo de pulso, título y KPI principal. Es el elemento 
+de mayor tamaño tipográfico (48 px) y contraste, y responde a la pregunta central en segundos. 
+• Nivel 2 (evidencia): mapa coroplético, serie de evolución y cuatro KPIs secundarios. Sustentan el 
+mensaje con distribución geográfica, tendencia y estadísticos complementarios. 
+El pulso de la felicidad mundial — Fase 2 Proyecto 1 
+Universidad del Caribe · Visualización de Datos · 13 de noviembre de 2026 Página 14 de 23 
+• Nivel 3 (contexto y detalle): rankings Top/Bottom 10, comparación regional, dispersión y notas. Se 
+consultan después de captar el mensaje general. 
+5.3 Fundamentos de diseño: Patrón Z, Gestalt y flujo Push → Pull 
+Patrón Z (Diagrama de Gutenberg) 
+En interfaces con información dispersa, la mirada recorre la pantalla en forma de «Z»: de la esquina 
+superior izquierda a la superior derecha, baja en diagonal hacia la inferior izquierda y termina en la 
+inferior derecha. El diseño ubica el contenido según esa trayectoria. 
+Tabla 13. Aplicación del patrón Z en la vista Panorama. 
+Zona del patrón Z Contenido asignado Función 
+Superior izquierda (inicio) Motivo de pulso y título del dashboard Identidad y contexto 
+Superior derecha KPI principal y selector de año Respuesta global y control temporal 
+Diagonal Tarjetas S1–S4, mapa coroplético y serie de evolución Evidencia principal 
+Inferior izquierda Rankings Top/Bottom 10 Extremos de la distribución 
+Inferior derecha (cierre) Dispersión PIB–felicidad y notas Invitación a explorar factores 
+ 
+Principios Gestalt 
+Tabla 14. Principios Gestalt aplicados. 
+Principio Aplicación en el dashboard 
+Proximidad Los cuatro KPIs secundarios se agrupan en una fila con 16 px de separación; las etiquetas se colocan junto a su gráfico y los bloques de nivel 3 comparten el mismo espaciado. 
+Semejanza Todas las tarjetas comparten forma, borde y tipografía; el ámbar siempre codifica felicidad y el cobalto siempre codifica selección o comparación. 
+Cierre Las tarjetas y los paneles usan contenedores con borde suave; el cerebro completa el contorno y percibe cada gráfico como unidad. 
+Continuidad Las líneas de evolución, los ejes alineados y la cuadrícula de 12 columnas guían la mirada de izquierda a derecha y de arriba abajo. 
+ 
+Flujo progresivo Push → Pull 
+Push: la vista Panorama entrega primero el mensaje (KPI principal, mapa y tendencia) sin que el usuario 
+deba realizar acciones. Pull: el usuario avanza hacia la exploración mediante acciones voluntarias: filtrar 
+el año, pasar el cursor para ver detalles, abrir «Explorar factores», hacer clic en un país para ir a «Mi país» 
+o consultar «Datos y notas». Esto reduce la carga cognitiva inicial y mantiene la profundidad analítica 
+disponible. 
+5.4 Inventario de vistas 
+Tabla 15. Inventario de las cinco vistas del dashboard. 
+Vista Propósito Rol en el flujo 
+01 Panorama Respuesta global (KPIs, mapa, tendencia, rankings) Push 
+02 Explorar factores Relación entre dimensiones y puntaje Pull 
+El pulso de la felicidad mundial — Fase 2 Proyecto 1 
+Universidad del Caribe · Visualización de Datos · 13 de noviembre de 2026 Página 15 de 23 
+Vista Propósito Rol en el flujo 
+03 Mi país Perfil nacional frente al mundo y a su región Pull 
+04 Datos y notas Transparencia metodológica y detalle Pull 
+05 Estados especiales Comunicación de ausencias y excepciones Soporte transversal 
+ 
+5.5 Descripción de las vistas y wireframes 
+Cada vista se documenta con su versión de baja fidelidad (estructura, jerarquía y posición) y su versión de 
+alta fidelidad (paleta, tipografía y estados finales). Los archivos se incorporan desde el directorio de 
+trabajo; los diseños fuente están en Figma. 
+Prototipo en Figma: https://www.figma.com/design/5NYMm1rg8w5NMPPhFDwA35/wireframe_baja_fidelidad?node-id=0-
+1&t=SpvozdMFPId6RJAj-1 
+5.5.1 Vista 01: Panorama 
+Es la vista de entrada (Push). Entrega en una sola pantalla la respuesta global a la pregunta central: el KPI 
+principal, los cuatro secundarios, el mapa coroplético y la evolución temporal, y deja los detalles 
+comparativos en el nivel 3. 
+• Nivel 1: encabezado con motivo de pulso, título del dashboard, filtro de año (con reproducción) y 
+tarjeta del KPI principal (5.53). 
+• Nivel 2: cuatro tarjetas KPI secundarias (S1–S4), mapa coroplético (columnas 1–7) y gráfico de 
+líneas de evolución (columnas 8–12). 
+• Nivel 3: rankings Top/Bottom 10, comparación regional con línea de promedio global, dispersión 
+PIB–felicidad y franja de notas. 
+Baja fidelidad. Bloques grises con etiquetas que fijan la posición, el tamaño relativo y el orden de lectura 
+sin color ni tipografía final. 
+ 
+Figura 2. Vista 01: Panorama — wireframe de baja fidelidad (01 - Panorama (Baja Fidelidad).png). 
+
+El pulso de la felicidad mundial — Fase 2 Proyecto 1 
+Universidad del Caribe · Visualización de Datos · 13 de noviembre de 2026 Página 16 de 23 
+Alta fidelidad. Aplicación de la paleta «Sol y Horizonte», tipografía Inter, mapa de 6 clases y tarjetas con 
+variación respecto de 2015. 
+ 
+Figura 3. Vista 01: Panorama — diseño de alta fidelidad (01 - Panorama (Alta Fidelidad).png). 
+5.5.2 Vista 02: Explorar factores 
+Vista de exploración (Pull) para analizar qué dimensiones se asocian con el puntaje de felicidad. Prioriza 
+la comparación entre variables y la lectura de la distribución. 
+• Selector de dimensión (PIB per cápita, apoyo social, esperanza de vida saludable, libertad, 
+generosidad y corrupción percibida). 
+• Gráfico de dispersión principal con línea de tendencia y valor de r (0.77 en 2024 para PIB per cápita). 
+• Percentiles (p10, p25, p50, p75, p90) y comparación regional como contexto. 
+• Aviso de armonización para la corrupción percibida (2015, 2020, 2021 y 2023). 
+
+El pulso de la felicidad mundial — Fase 2 Proyecto 1 
+Universidad del Caribe · Visualización de Datos · 13 de noviembre de 2026 Página 17 de 23 
+Baja fidelidad. Define la disposición del selector, la dispersión dominante y los paneles de apoyo. 
+ 
+Figura 4. Vista 02: Explorar factores — wireframe de baja fidelidad (02 - Explorar Factores (Baja Fidelidad).png). 
+Alta fidelidad. Puntos en ámbar, país seleccionado en cobalto, ejes en gris pizarra y leyendas numéricas 
+legibles. 
+ 
+Figura 5. Vista 02: Explorar factores — diseño de alta fidelidad (02 - Explorar Factores (Alta Fidelidad).png). 
+5.5.3 Vista 03: Mi país 
+Perfil individual al que se llega con clic en un país del mapa, del ranking o de la dispersión. Contextualiza 
+el desempeño nacional frente al promedio mundial y frente a su región. 
+• Selector de país con nombres en español (catálogo ISO). 
+
+El pulso de la felicidad mundial — Fase 2 Proyecto 1 
+Universidad del Caribe · Visualización de Datos · 13 de noviembre de 2026 Página 18 de 23 
+• Tarjetas del puntaje, la posición en el ranking y la variación frente a 2015. 
+• Serie temporal del país frente al promedio global (máximo 2 series para claridad). 
+• Perfil de dimensiones (PIB per cápita, apoyo social, esperanza de vida, libertad, generosidad, 
+corrupción) con comparación regional. 
+Baja fidelidad. Fija la jerarquía interna: identificación del país, KPIs y series, y desglose por dimensión. 
+ 
+Figura 6. Vista 03: Mi país — wireframe de baja fidelidad (03 - Mi País (Baja Fidelidad).png). 
+Alta fidelidad. País en cobalto frente a promedio mundial en gris pizarra; cifras en tipografía tabular. 
+ 
+Figura 7. Vista 03: Mi país — diseño de alta fidelidad (03 - Mi País (Alta Fidelidad).png). 
+
+El pulso de la felicidad mundial — Fase 2 Proyecto 1 
+Universidad del Caribe · Visualización de Datos · 13 de noviembre de 2026 Página 19 de 23 
+5.5.4 Vista 04: Datos y notas 
+Vista de transparencia metodológica y acceso al dato. Permite verificar las cifras mostradas y comprender 
+las limitaciones del conjunto de datos. 
+• Tabla de detalle ordenable y filtrable por país, año y región. 
+• Notas metodológicas: 1,502 observaciones país-año, 165 países unificados, PIB de 2016 excluido por 
+corrupción de datos y corrupción percibida armonizada en 2015, 2020, 2021 y 2023. 
+• Definiciones de KPIs (S1–S4), fuente del dataset y enlaces a GitHub y Kaggle. 
+Baja fidelidad. Establece la estructura de tabla, el panel de filtros y las secciones de nota. 
+ 
+Figura 8. Vista 04: Datos y notas — wireframe de baja fidelidad (04 - Datos y Notas (Baja Fidelidad).png). 
+
+El pulso de la felicidad mundial — Fase 2 Proyecto 1 
+Universidad del Caribe · Visualización de Datos · 13 de noviembre de 2026 Página 20 de 23 
+Alta fidelidad. Encabezados #1E293B con texto blanco, filas alternas #FFFBF2 y cajas de nota con borde 
+ámbar. 
+ 
+Figura 9. Vista 04: Datos y notas — diseño de alta fidelidad (04 - Datos y Notas (Alta Fidelidad).png). 
+5.5.5 Vista 05: Estados especiales 
+Catálogo de estados excepcionales que el dashboard debe comunicar sin ambigüedad. Evita que una 
+ausencia de dato se interprete como un valor cero o un error. 
+• PIB 2016 «N/D»: valor no disponible por corrupción de datos; la dispersión y S4 muestran el aviso 
+en lugar de un punto. 
+• Año base 2015: las variaciones frente a 2015 muestran «Año base» en lugar de 0.00. 
+• País sin dato en el año: el mapa lo pinta en #CBD5E1 y el tooltip indica «Sin datos para este año». 
+• Saltos de escala en 2018: anotación en el gráfico de líneas para evitar lecturas erróneas de 
+tendencia. 
+• Filtros vacíos: mensaje de «Sin resultados» con botón «Limpiar filtros». 
+
+El pulso de la felicidad mundial — Fase 2 Proyecto 1 
+Universidad del Caribe · Visualización de Datos · 13 de noviembre de 2026 Página 21 de 23 
+Baja fidelidad. Muestra la ubicación y el texto de cada estado dentro de los componentes originales. 
+ 
+Figura 10. Vista 05: Estados especiales — wireframe de baja fidelidad (05 - Estados Especiales (Baja Fidelidad).png). 
+Alta fidelidad. Estados con íconos, texto en pizarra, gris #CBD5E1 y botones en cobalto. 
+ 
+Figura 11. Vista 05: Estados especiales — diseño de alta fidelidad (05 - Estados Especiales (Alta Fidelidad).png). 
+ 
+
+El pulso de la felicidad mundial — Fase 2 Proyecto 1 
+Universidad del Caribe · Visualización de Datos · 13 de noviembre de 2026 Página 22 de 23 
+6. Especificaciones para la Fase 3 (Implementación 
+en React) y Conclusiones 
+6.1 Reglas de interacción 
+Tabla 16. Reglas de interacción para la implementación. 
+Elemento Evento Comportamiento esperado 
+Filtro de año (2015–
+2024) 
+Selección o arrastre del 
+control 
+Actualiza KPIs, mapa, rankings, regiones y dispersión de manera 
+sincronizada. Mantiene el rango fijo 1.7–7.8. 
+Reproducción animada Botón «Reproducir» / «Pausar» Avanza un año por intervalo de 1 s de 2015 a 2024; se detiene al final o al pulsar «Pausar». Respeta la preferencia del sistema «reducir movimiento». 
+Tooltips (hover y foco) 
+Cursor o teclado sobre 
+mapa, barras, líneas o 
+puntos 
+Muestra país, año, valor con dos decimales (punto decimal) y 
+estado («N/D» o «Sin datos» si aplica). 
+Clic en país Clic en mapa, ranking o dispersión Navega a la vista «Mi país» con ese país seleccionado y conserva el año activo. 
+Botón «Limpiar filtros» Clic Restablece año, región y país a los valores por defecto (2024; todas las regiones) y quita estados vacíos. 
+Filtros vacíos Combinación sin resultados Muestra el estado «Sin resultados» (vista 05) con acción «Limpiar filtros». 
+Año base 2015 Selección de 2015 Las variaciones muestran «Año base»; no se calculan diferencias. 
+PIB 2016 Selección de 2016 en vistas con I2 Muestra «N/D» y omite el cálculo de S4 para ese año. 
+ 
+6.2 Catálogo ISO para nombres de países en español 
+Los nombres de países se normalizan mediante un catálogo basado en ISO 3166-1 alfa-3 (clave primaria) 
+que asocia el nombre oficial en español y la región. Esto unifica las variantes del dataset (165 países 
+unificados), permite el cruce con los polígonos del mapa y garantiza que las etiquetas, tooltips, tablas y 
+buscadores usen un único nombre. 
+Tabla 17. Ejemplos del catálogo ISO (el catálogo completo cubre los 165 países). 
+ISO alfa-3 Nombre en español Uso 
+MEX México Clave de cruce con el GeoJSON y la tabla de datos 
+FIN Finlandia Etiquetas de ranking y tooltips 
+DNK Dinamarca Etiquetas de ranking y tooltips 
+ESP España Selector de país en «Mi país» 
+USA Estados Unidos Normalización de variantes del nombre en inglés 
+ 
+El pulso de la felicidad mundial — Fase 2 Proyecto 1 
+Universidad del Caribe · Visualización de Datos · 13 de noviembre de 2026 Página 23 de 23 
+6.3 Stack técnico 
+Tabla 18. Stack técnico propuesto para la Fase 3. 
+Capa Tecnología Responsabilidad 
+Aplicación React + Vite Componentes de las 5 vistas, enrutamiento y estado global (año, región, país). 
+Gráficos Recharts Líneas (máx. 5 series), barras ordenadas, barra apilada al 100%, dispersión y percentiles. 
+Mapa React-Leaflet Mapa coroplético con GeoJSON, escala de 6 clases y gris «Sin datos». 
+Datos Supabase (PostgreSQL) Tablas de países y observaciones (1,502 filas); consultas de KPIs; PIB 2016 como valor nulo. 
+Estilos CSS Grid y variables CSS Cuadrícula de 12 columnas, paleta, tipografía Inter y estados de foco. 
+Repositorio GitHub Control de versiones y despliegue (pulso-felicidad). 
+ 
+6.4 Criterios de aceptación para la Fase 3 
+• Las cifras de los KPIs coinciden con la Tabla de KPIs (5.53, 5.80, 4.21, 59% y r = 0.77 en 2024). 
+• La escala del mapa se mantiene fija en 1.7–7.8 en cualquier año seleccionado. 
+• Ningún gráfico de líneas supera 5 series y ninguno usa gráfico de pastel. 
+• Todos los estados de la vista 05 se reproducen con datos reales. 
+• El contraste de texto informativo es igual o superior a 4.5:1 y el foco por teclado es visible. 
+6.5 Conclusiones 
+La Fase 2 convierte el análisis de la Fase 1 en un sistema de diseño coherente y justificado. Los cinco KPIs 
+cubren nivel, tendencia, dispersión, desigualdad, alcance del cambio y asociación con el desarrollo 
+económico. Cada uno tiene una visualización acorde con las reglas de la clase. La paleta «Sol y Horizonte» 
+y la tipografía Inter se apoyan en contrastes calculados y en una escala coroplética apta para daltonismo. 
+La arquitectura de 12 columnas con tres niveles de jerarquía, el patrón Z, los principios Gestalt y el flujo 
+Push → Pull ordenan la lectura de las cinco vistas, incluidos los estados especiales que protegen la 
+integridad de la interpretación (PIB 2016 «N/D», año base 2015, países sin dato, saltos de escala en 2018 
+y filtros vacíos). 
+Con estas especificaciones, el equipo del Proyecto 1 cuenta con la base necesaria para implementar en la 
+Fase 3 un dashboard en React que comunique con claridad el pulso de la felicidad mundial entre 2015 y 
+2024. 
+Recursos del proyecto 
+Dataset: https://www.kaggle.com/datasets/yadiraespinoza/world-happiness-2015-2024 
+Repositorio: https://github.com/Abb-968/pulso-felicidad 
+Prototipo en Figma: 
+https://www.figma.com/design/5NYMm1rg8w5NMPPhFDwA35/wireframe_baja_fidelidad?node-id=0-
+1&t=SpvozdMFPId6RJAj-1 
+ 

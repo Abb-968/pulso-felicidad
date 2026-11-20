@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "generate:data": "C:/Python314/python.exe scripts/generate-happiness-json.py"
+    "generate:data": "C:/Python314/python.exe scripts/generate-happiness-json.py",
+    "verify:phase": "node scripts/verify-phase1-phase2.mjs"
   },
   "dependencies": {
     "d3-geo": "^3.1.2",

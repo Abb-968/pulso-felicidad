@@ -102,3 +102,73 @@ export function calculateKpis(data, year, region = 'Todas') {
     improvement: improvementVs2015(data, year, region),
   }
 }
+
+export function regionalRank(data, countryKey, year) {
+  const country = data.find((record) => record.country_key === countryKey && record.year === Number(year))
+  if (!country) return { rank: null, total: 0 }
+  const sameRegion = data.filter((record) => record.year === Number(year) && record.region === country.region && Number.isFinite(record.score)).sort((a, b) => b.score - a.score)
+  const rank = sameRegion.findIndex((record) => record.country_key === countryKey) + 1
+  return { rank: rank || null, total: sameRegion.length }
+}
+
+export function percentileByDimension(data, countryKey, year) {
+  const dimensions = ['score', 'gdp_valid', 'social', 'hle_norm', 'freedom', 'generosity', 'corruption']
+  const country = data.find((record) => record.country_key === countryKey && record.year === Number(year))
+  if (!country) return Object.fromEntries(dimensions.map((dimension) => [dimension, null]))
+  return Object.fromEntries(dimensions.map((dimension) => {
+    if (Number(year) === 2016 && dimension === 'gdp_valid') return [dimension, null]
+    const values = data.filter((record) => record.year === Number(year) && Number.isFinite(record[dimension])).map((record) => record[dimension])
+    if (!Number.isFinite(country[dimension]) || !values.length) return [dimension, null]
+    let lower = 0
+    let equal = 0
+    values.forEach((value) => { if (value < country[dimension]) lower += 1; if (value === country[dimension]) equal += 1 })
+    return [dimension, ((lower + 0.5 * equal) / values.length) * 100]
+  }))
+}
+
+export function topBottom(data, year, n = 10) {
+  const records = data.filter((record) => record.year === Number(year) && Number.isFinite(record.score)).sort((a, b) => b.score - a.score)
+  return { top: records.slice(0, n), bottom: [...records].sort((a, b) => a.score - b.score).slice(0, n) }
+}
+
+function percentile(values, probability) {
+  if (!values.length) return null
+  const sorted = [...values].sort((a, b) => a - b)
+  const position = (sorted.length - 1) * probability
+  const lower = Math.floor(position)
+  const upper = Math.ceil(position)
+  if (lower === upper) return sorted[lower]
+  return sorted[lower] + (sorted[upper] - sorted[lower]) * (position - lower)
+}
+
+export function medianIQR(data, year) {
+  const scores = data.filter((record) => record.year === Number(year) && Number.isFinite(record.score)).map((record) => record.score)
+  const baseScores = data.filter((record) => record.year === 2015 && Number.isFinite(record.score)).map((record) => record.score)
+  const median = percentile(scores, 0.5)
+  const q1 = percentile(scores, 0.25)
+  const q3 = percentile(scores, 0.75)
+  const baseMedian = percentile(baseScores, 0.5)
+  return { median, q1, q3, IQR: q1 === null || q3 === null ? null : q3 - q1, delta2015: Number(year) === 2015 || median === null || baseMedian === null ? null : median - baseMedian }
+}
+
+export function improvedBar(data, year) {
+  if (Number(year) === 2015) return { improved: 0, notImproved: 0 }
+  const baseline = new Map(data.filter((record) => record.year === 2015 && Number.isFinite(record.score)).map((record) => [record.country_key, record.score]))
+  const paired = data.filter((record) => record.year === Number(year) && Number.isFinite(record.score) && baseline.has(record.country_key))
+  const improved = paired.filter((record) => record.score > baseline.get(record.country_key)).length
+  return { improved, notImproved: paired.length - improved }
+}
+
+export function pearsonSafe(x, y) {
+  const pairs = x.map((value, index) => [value, y[index]]).filter(([first, second]) => Number.isFinite(first) && Number.isFinite(second))
+  const n = pairs.length
+  if (!n) return { r: null, n: 0, reliable: false }
+  const meanX = pairs.reduce((sum, [first]) => sum + first, 0) / n
+  const meanY = pairs.reduce((sum, [, second]) => sum + second, 0) / n
+  let covariance = 0
+  let varianceX = 0
+  let varianceY = 0
+  pairs.forEach(([first, second]) => { covariance += (first - meanX) * (second - meanY); varianceX += (first - meanX) ** 2; varianceY += (second - meanY) ** 2 })
+  const denominator = Math.sqrt(varianceX * varianceY)
+  return { r: denominator === 0 ? null : covariance / denominator, n, reliable: n >= 8 }
+}

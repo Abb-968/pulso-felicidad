@@ -11,23 +11,26 @@ COLUMNS = (
     "country",
     "country_key",
     "region",
+    "rank_source",
     "rank_recalc",
     "score",
     "gdp",
     "gdp_valid",
     "social",
     "hle",
+    "hle_norm",
     "freedom",
     "generosity",
     "corruption",
 )
-INTEGER_COLUMNS = {"year", "rank_recalc"}
-NUMBER_COLUMNS = {"score", "gdp", "gdp_valid", "social", "hle", "freedom", "generosity", "corruption"}
+INTEGER_COLUMNS = {"year", "rank_source", "rank_recalc"}
+NUMBER_COLUMNS = {"score", "gdp", "gdp_valid", "social", "hle", "hle_norm", "freedom", "generosity", "corruption"}
 NULLABLE_NUMBER_COLUMNS = {
     "gdp",
     "gdp_valid",
     "social",
     "hle",
+    "hle_norm",
     "freedom",
     "generosity",
     "corruption",
