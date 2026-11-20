@@ -26,6 +26,7 @@ export default function CountryView({ data, year, countryKey, setCountryKey, sea
   const base = data.find((row) => row.year === 2015 && row.country_key === countryKey)
   const filteredSearch = countries.filter((row) => row.nameEs.toLowerCase().includes(search.toLowerCase()) || row.name.toLowerCase().includes(search.toLowerCase()))
   const currentCountries = data.filter((row) => row.year === year)
+  const regionCountries = current ? data.filter((row) => row.year === year && row.region === current.region) : []
   const regionRows = current ? data.filter((row) => row.year === year && row.region === current.region) : []
   const regionAverage = regionRows.length ? regionRows.reduce((sum, row) => sum + row.score, 0) / regionRows.length : null
   const globalAverage = currentCountries.length ? currentCountries.reduce((sum, row) => sum + row.score, 0) / currentCountries.length : null
@@ -246,7 +247,7 @@ export default function CountryView({ data, year, countryKey, setCountryKey, sea
       <article><span>Frente a su región</span><strong>{fmtSigned(regionDiff)}</strong><small>vs promedio regional {fmtNum(regionAverage)}</small></article>
       <article><span>Frente al mundo</span><strong>{fmtSigned(worldDiff)}</strong><small>vs promedio global {fmtNum(globalAverage)}</small></article>
       <article><span>Cambio 2015-2024</span><strong className={change < 0 ? 'country-change-negative' : ''}>{year === 2015 || change === null ? 'Año base' : fmtSigned(change)}</strong><small>{year === 2015 ? 'Periodo base' : 'vs 2015'}</small></article>
-      <article><span>Lugar en región</span><strong>{regionRanking.rank ? `${fmtInt(regionRanking.rank)}.º` : 'N/D'}</strong><small>de {fmtInt(regionRanking.total)} países</small></article>
+      <article><span>Lugar en región</span><strong>{regionRanking.rank ? `${fmtInt(regionRanking.rank)}.º` : 'N/D'}</strong><small>de {fmtInt(regionCountries.length)} países</small></article>
     </div>
     <div className="dashboard-grid country-grid">
       <section className="panel" aria-label={`Evolución de ${countryEs(current.country)} frente a región y mundo`}><div className="panel-heading"><h2>Evolución de{' '}<span translate="no" className="notranslate">{countryEs(current.country)}</span>{' '}frente al mundo</h2></div><div className="country-selector country-selector-compare panel-country-controls"><label>+ Añadir país (máx. 3)<select value="" onChange={(event) => {
